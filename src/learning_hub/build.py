@@ -1,4 +1,5 @@
 from src.learning_hub.enrich import enrich_stage_list
+from src.learning_hub.interview_qa_stage15 import STAGE15_INTERVIEW_QA
 from src.learning_hub.models import HubContent
 from src.learning_hub.stage15 import STAGE15_CONTENT
 from src.learning_hub.stage16 import STAGE16_CONTENT
@@ -8,10 +9,11 @@ from src.learning_hub.stages_08_14 import STAGES_08_14
 
 def build_hub_content() -> HubContent:
     stages = enrich_stage_list(STAGES_00_07 + STAGES_08_14)
+    stage15 = {**STAGE15_CONTENT, "interview_qa": STAGE15_INTERVIEW_QA}
     return {
         "version": "1.0.0",
         "stages": stages,
-        "stage15": STAGE15_CONTENT,
+        "stage15": stage15,
         "stage16": STAGE16_CONTENT,
         "overview": {
             "title": "Agentic AI Prep — Mülakat Hazırlık Merkezi",

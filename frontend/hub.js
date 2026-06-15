@@ -40,6 +40,14 @@ function setActiveNav(view) {
   });
 }
 
+function scrollToTop() {
+  requestAnimationFrame(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  });
+}
+
 function navigate(view) {
   currentView = view;
   setActiveNav(view);
@@ -47,28 +55,24 @@ function navigate(view) {
 
   if (view === "overview") {
     renderOverview();
-    return;
-  }
-  if (view === "demo") {
+  } else if (view === "demo") {
     renderDemo();
-    return;
-  }
-  if (view === "stage-15") {
+  } else if (view === "stage-15") {
     renderStage15();
-    return;
-  }
-  if (view === "stage-16") {
+  } else if (view === "stage-16") {
     renderStage16();
-    return;
-  }
-  const match = view.match(/^stage-(\d+)$/);
-  if (match) {
-    const stageId = Number(match[1]);
-    const stage = hubData.stages.find((s) => s.id === stageId);
-    if (stage) {
-      renderStage(stage);
+  } else {
+    const match = view.match(/^stage-(\d+)$/);
+    if (match) {
+      const stageId = Number(match[1]);
+      const stage = hubData.stages.find((s) => s.id === stageId);
+      if (stage) {
+        renderStage(stage);
+      }
     }
   }
+
+  scrollToTop();
 }
 
 function renderOverview() {
@@ -137,9 +141,38 @@ function renderStage(stage) {
 }
 
 function renderStageSummary(stage) {
+  const guide = stage.concept_guide;
+  const guideHtml = guide
+    ? `
+      <div class="tech-intro">
+        <h3>${escapeHtml(guide.title)} nedir?</h3>
+        <p class="tech-definition">${escapeHtml(guide.definition)}</p>
+        <div class="tech-purpose">
+          <h4>Ne işe yarar?</h4>
+          <p>${escapeHtml(guide.purpose)}</p>
+        </div>
+      </div>
+      <div class="concept-guide">
+        <h3>Kavram Rehberi</h3>
+        <div class="concept-section">
+          <h4>Nasıl çalışır?</h4>
+          <p>${escapeHtml(guide.how_it_works)}</p>
+        </div>
+        <div class="concept-section">
+          <h4>Temel mantık</h4>
+          <p>${escapeHtml(guide.core_logic)}</p>
+        </div>
+        <div class="concept-section highlight">
+          <h4>Bu projede nasıl kullanılıyor?</h4>
+          <p>${escapeHtml(guide.in_this_project)}</p>
+        </div>
+      </div>`
+    : "";
+
   return `
     <section class="panel">
       <p class="lead">${escapeHtml(stage.summary || "")}</p>
+      ${guideHtml}
       <h3>Konular</h3>
       <ul class="tag-list">${(stage.topics || []).map((t) => `<li>${escapeHtml(t)}</li>`).join("")}</ul>
       ${stage.commands?.length ? `<h3>Komutlar</h3><pre class="code-block">${stage.commands.join("\n")}</pre>` : ""}

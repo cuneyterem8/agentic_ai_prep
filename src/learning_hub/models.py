@@ -37,11 +37,21 @@ class InterviewQA(TypedDict, total=False):
     tags: list[str]
 
 
+class ConceptGuide(TypedDict):
+    title: str
+    definition: str
+    purpose: str
+    how_it_works: str
+    core_logic: str
+    in_this_project: str
+
+
 class StageContent(TypedDict, total=False):
     id: int
     title: str
     subtitle: str
     summary: str
+    concept_guide: ConceptGuide
     topics: list[str]
     classes: list[ClassInfo]
     lab_actions: list[LabAction]

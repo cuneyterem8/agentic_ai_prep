@@ -182,6 +182,7 @@ body {
   font-size: 1.05rem;
   line-height: 1.6;
   color: var(--text-secondary);
+  margin: 0 0 20px;
 }
 
 .subtitle {
@@ -304,6 +305,90 @@ body {
 
 .stage-name {
   font-size: 0.85rem;
+}
+
+.tech-intro {
+  margin-bottom: 20px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel-alt);
+}
+
+.tech-intro > h3 {
+  margin: 0 0 12px;
+  color: var(--text);
+  font-size: 1.1rem;
+}
+
+.tech-definition {
+  margin: 0 0 16px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  font-size: 0.96rem;
+}
+
+.tech-purpose h4 {
+  margin: 0 0 6px;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.tech-purpose p {
+  margin: 0;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  font-size: 0.94rem;
+}
+
+.concept-guide {
+  margin-bottom: 24px;
+  padding: 16px 18px;
+  border: 1px solid var(--accent-border);
+  border-radius: 12px;
+  background: rgba(255, 98, 0, 0.06);
+}
+
+.concept-guide > h3 {
+  margin: 0 0 14px;
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+.concept-section {
+  margin-bottom: 14px;
+}
+
+.concept-section:last-child {
+  margin-bottom: 0;
+}
+
+.concept-section h4 {
+  margin: 0 0 6px;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.concept-section p {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  font-size: 0.94rem;
+}
+
+.concept-section.highlight {
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+}
+
+.concept-section.highlight h4 {
+  color: #fdba74;
 }
 
 /* Classes */

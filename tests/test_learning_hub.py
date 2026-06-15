@@ -65,6 +65,32 @@ def test_all_stages_classes_include_implementation_details():
                 assert detail["usage"], f"Missing usage for {detail['name']}"
 
 
+def test_all_stages_include_concept_guide():
+    hub = build_hub_content()
+    for stage in hub["stages"]:
+        guide = stage.get("concept_guide")
+        assert guide, f"Stage {stage['id']} missing concept_guide"
+        for key in ("title", "definition", "purpose", "how_it_works", "core_logic", "in_this_project"):
+            assert guide.get(key), f"Stage {stage['id']} concept_guide missing {key}"
+
+
+def test_interview_qa_answers_are_expanded():
+    hub = build_hub_content()
+    min_answer_len = 120
+    min_deep_dive_len = 80
+    for stage in hub["stages"]:
+        for qa in stage.get("interview_qa", []):
+            assert len(qa.get("answer", "")) >= min_answer_len, (
+                f"Stage {stage['id']} Q&A answer too short: {qa.get('question', '')[:50]}"
+            )
+            if qa.get("deep_dive"):
+                assert len(qa["deep_dive"]) >= min_deep_dive_len, (
+                    f"Stage {stage['id']} deep_dive too short"
+                )
+    for qa in hub["stage15"].get("interview_qa", []):
+        assert len(qa.get("answer", "")) >= min_answer_len
+
+
 def test_ui_hub_assets_are_served(client):
     for asset in ("styles.css", "hub.js", "demo.js", "playground.js"):
         response = client.get(f"/ui/{asset}")

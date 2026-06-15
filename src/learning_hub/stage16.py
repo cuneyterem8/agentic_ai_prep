@@ -1,5 +1,7 @@
 """Stage 16 — Full interview simulation: aggregates all Q&A + simulation format."""
 
+from src.learning_hub.interview_qa_expanded import STAGE_INTERVIEW_QA
+from src.learning_hub.interview_qa_stage15 import STAGE15_INTERVIEW_QA
 from src.learning_hub.stage15 import STAGE15_CONTENT
 from src.learning_hub.stages_00_07 import STAGES_00_07
 from src.learning_hub.stages_08_14 import STAGES_08_14
@@ -8,15 +10,17 @@ from src.learning_hub.stages_08_14 import STAGES_08_14
 def _collect_all_qa() -> list[dict]:
     items: list[dict] = []
     for stage in STAGES_00_07 + STAGES_08_14:
-        for qa in stage.get("interview_qa", []):
+        stage_id = stage["id"]
+        qa_list = STAGE_INTERVIEW_QA.get(stage_id, stage.get("interview_qa", []))
+        for qa in qa_list:
             items.append(
                 {
-                    "stage_id": stage["id"],
+                    "stage_id": stage_id,
                     "stage_title": stage["title"],
                     **qa,
                 }
             )
-    for qa in STAGE15_CONTENT.get("interview_qa", []):
+    for qa in STAGE15_INTERVIEW_QA:
         items.append(
             {
                 "stage_id": 15,
