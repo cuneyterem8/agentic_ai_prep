@@ -35,7 +35,7 @@ def test_audit_log_masks_pii(stores):
         action="tool_call_completed",
         risk_level="high",
         details={
-            "email": "customer@ing.com",
+            "email": "customer@example.com",
             "iban": "TR330006100519786457841326",
             "phone": "+90 532 000 00 00",
         },
@@ -88,3 +88,14 @@ def test_mask_pii_examples():
     masked = mask_pii(raw)
     assert "alice@bank.com" not in masked
     assert "[EMAIL_REDACTED]" in masked
+
+
+def test_sqlite_file_creates_parent_directory(tmp_path):
+    db_file = tmp_path / "nested" / "app.db"
+    stores = build_data_stores(f"sqlite+pysqlite:///{db_file}")
+    conversation = stores.conversation_repo.create(
+        user_id="user-1",
+        conversation_id="conv-nested",
+    )
+    assert conversation.id == "conv-nested"
+    assert db_file.exists()

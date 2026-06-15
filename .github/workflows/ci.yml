@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build production image
-        run: docker build -t agenticai-ing-prep:ci .
+        run: docker build -t agentic-ai-prep:ci .
 
       - name: Smoke healthcheck in container
         run: |
@@ -44,7 +44,7 @@ jobs:
             -e APP_ENV=staging \
             -e LLM_PROVIDER=mock \
             -e DATABASE_URL=sqlite:///./data/app.db \
-            agenticai-ing-prep:ci
+            agentic-ai-prep:ci
           for i in $(seq 1 20); do
             if curl -fsS http://127.0.0.1:18000/health; then
               exit 0

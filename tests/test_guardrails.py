@@ -63,9 +63,9 @@ def test_validate_tool_arguments_allows_valid_knowledge_search():
 
 
 def test_pii_is_masked_before_logging_or_storage_representation():
-    raw = "Contact me at customer@ing.com or TR330006100519786457841326"
+    raw = "Contact me at customer@example.com or TR330006100519786457841326"
     masked = mask_pii(raw)
-    assert "customer@ing.com" not in masked
+    assert "customer@example.com" not in masked
     assert "TR330006100519786457841326" not in masked
     assert "[EMAIL_REDACTED]" in masked
     assert "[IBAN_REDACTED]" in masked

@@ -96,7 +96,7 @@ def test_minimize_tool_arguments_masks_pii_and_drops_extra_fields():
         {
             "amount": 1000,
             "destination": "TR330006100519786457841326",
-            "customer_email": "secret@ing.com",
+            "customer_email": "secret@example.com",
         },
     )
     assert "customer_email" not in args

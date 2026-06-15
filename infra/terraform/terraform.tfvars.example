@@ -1,5 +1,5 @@
 aws_region     = "eu-central-1"
-project_name   = "agenticai-ing-prep"
+project_name   = "agentic-ai-prep"
 environment    = "staging"
 app_version    = "0.1.0"
 llm_provider   = "mock"

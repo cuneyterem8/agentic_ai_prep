@@ -22,14 +22,14 @@ class RetrievalResult(BaseModel):
     rank: int
 
 
-def default_ing_documents() -> list[SourceDocument]:
-    """ING benzeri küçük iç bilgi tabanı."""
+def default_banking_documents() -> list[SourceDocument]:
+    """Örnek bankacılık iç bilgi tabanı."""
     return [
         SourceDocument(
             id="doc-1",
             title="Password Reset Policy",
             content=(
-                "ING internal policy: password reset requires identity verification. "
+                "Internal banking policy: password reset requires identity verification. "
                 "Customer must pass KYC checks before reset is approved."
             ),
             metadata={"category": "security", "department": "ops"},

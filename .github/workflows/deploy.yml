@@ -114,7 +114,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
           IMAGE_TAG: ${{ steps.version.outputs.value }}
         run: |
-          IMAGE_URI="$ECR_REGISTRY/${{ vars.ECR_REPOSITORY || 'agenticai-ing-prep-api' }}:$IMAGE_TAG"
+          IMAGE_URI="$ECR_REGISTRY/${{ vars.ECR_REPOSITORY || 'agentic-ai-prep-api' }}:$IMAGE_TAG"
           docker build -t "$IMAGE_URI" .
           docker push "$IMAGE_URI"
           echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_ENV"

@@ -5,7 +5,7 @@ variable "aws_region" {
 
 variable "project_name" {
   type    = string
-  default = "agenticai-ing-prep"
+  default = "agentic-ai-prep"
 }
 
 variable "environment" {

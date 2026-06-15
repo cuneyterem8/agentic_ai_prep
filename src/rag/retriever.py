@@ -93,8 +93,8 @@ def _matches_metadata(chunk_metadata: dict[str, str], expected: dict[str, str]) 
 
 
 def _build_default_knowledge_base() -> KnowledgeBase:
-    from src.rag.documents import default_ing_documents
+    from src.rag.documents import default_banking_documents
 
     kb = KnowledgeBase()
-    kb.ingest(default_ing_documents())
+    kb.ingest(default_banking_documents())
     return kb

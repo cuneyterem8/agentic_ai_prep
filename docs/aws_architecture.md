@@ -1,4 +1,4 @@
-# AWS Architecture — Agentic AI ING Prep
+# AWS Architecture — Agentic AI Prep
 
 ## Hedef
 

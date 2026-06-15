@@ -1,4 +1,4 @@
-# ING Hubs Expert AI/LLM Data Scientist Mülakat Hazırlık Planı
+# Agentic AI Prep — Expert AI/LLM Data Scientist Mülakat Hazırlık Planı
 
 Bu plan, `Expert AI/LLM Data Scientist in Agentic AI` rolü için hazırlanmıştır. Hedef sadece kavram ezberlemek değil; Python ağırlıklı, çalıştırılabilir, production mantığı olan küçük ama gerçekçi AI/agent servisleri geliştirerek mülakatta senior/expert seviyede cevap verebilmektir.
 
@@ -40,8 +40,8 @@ Her modül sonunda şunlar hazır olmalı:
 Kodları aşama aşama ekleyeceğiz. Başlangıçta tüm dosyaları üretmek yerine her aşamada sadece gereken parçayı yazacağız.
 
 ```text
-agenticai_ing_prep/
-  ing_agentic_ai_mulakat_hazirlik_plani.md
+agentic_ai_prep/
+  agentic_ai_mulakat_hazirlik_plani.md
   README.md
   requirements.txt
   .env
@@ -502,7 +502,7 @@ Yazılacak kod:
 
 Canlı kod görevi:
 
-- ING benzeri iç doküman parçalarından küçük bilgi tabanı oluştur.
+- Örnek bankacılık iç doküman parçalarından küçük bilgi tabanı oluştur.
 - Kullanıcı sorusuna en ilgili chunk'ları getir.
 - Cevap üretmeden önce kaynak chunk id'lerini göster.
 
@@ -932,7 +932,7 @@ Canlı kod görevi:
 
 Mülakat soruları:
 
-1. ING çalışanları için internal banking knowledge assistant tasarlasaydın uçtan uca nasıl kurardın?
+1. Kurum çalışanları için internal banking knowledge assistant tasarlasaydın uçtan uca nasıl kurardın?
 2. Bu sistemde en kritik failure mode'lar nelerdir?
 3. İlk MVP'de neyi dahil eder, neyi sonraya bırakırsın?
 4. Production readiness checklist'in ne olur?

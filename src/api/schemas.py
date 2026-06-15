@@ -212,3 +212,29 @@ class AnalystResponse(BaseModel):
     confidence: float
     guardrail_reasons: list[str]
     correctness_issues: list[str]
+
+
+class FeedbackRequest(BaseModel):
+    user_id: str = Field(min_length=1, max_length=128)
+    conversation_id: str = Field(min_length=1, max_length=128)
+    rating: str = Field(pattern="^(positive|negative)$")
+    comment: str = Field(default="", max_length=2000)
+    trace_id: str | None = None
+    run_id: str | None = None
+    message_preview: str = Field(default="", max_length=500)
+
+
+class FeedbackResponse(BaseModel):
+    feedback_id: str
+    timestamp: str
+    user_id: str
+    conversation_id: str
+    rating: str
+    comment: str
+    trace_id: str | None = None
+    run_id: str | None = None
+    message_preview: str = ""
+
+
+class FeedbackListResponse(BaseModel):
+    items: list[FeedbackResponse]

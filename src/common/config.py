@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     app_env: Literal["development", "staging", "production"] = "development"
     database_url: str = "sqlite:///./data/app.db"
 
-    app_name: str = Field(default="agenticai-ing-prep")
+    app_name: str = Field(default="agentic-ai-prep")
     app_version: str = Field(default="0.1.0")
 
 

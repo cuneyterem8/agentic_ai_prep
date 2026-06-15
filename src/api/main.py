@@ -1,15 +1,18 @@
 import time
 import uuid
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from src.api.exception_handlers import (
     app_exception_handler,
     llm_timeout_exception_handler,
     validation_exception_handler,
 )
-from src.api.routers import agent, analyst, chat, classify, observability, rag, security, workflow
+from src.api.routers import agent, analyst, chat, classify, feedback, learning_hub, observability, rag, security, workflow
 from src.common.config import get_settings
 from src.common.errors import AppError, AuthorizationError, LLMTimeoutError
 from src.common.health import healthcheck
@@ -33,10 +36,22 @@ app.include_router(agent.router)
 app.include_router(classify.router)
 app.include_router(workflow.router)
 app.include_router(rag.router)
-app.include_router(rag.router)
 app.include_router(analyst.router)
 app.include_router(observability.router)
 app.include_router(security.router)
+app.include_router(feedback.router)
+app.include_router(learning_hub.router)
+
+FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
+if FRONTEND_DIR.exists():
+    app.mount("/ui", StaticFiles(directory=FRONTEND_DIR, html=True), name="ui")
+
+
+@app.get("/")
+async def root_redirect():
+    if FRONTEND_DIR.exists():
+        return RedirectResponse(url="/ui/")
+    return {"message": "API running. Open /health or /docs"}
 
 
 @app.middleware("http")

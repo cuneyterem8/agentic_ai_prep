@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 from src.api.main import app
 from src.llm.mock_client import MockLLMClient
 from src.rag.chunking import chunk_text
-from src.rag.documents import default_ing_documents
+from src.rag.documents import default_banking_documents
 from src.rag.embeddings import MockEmbeddingProvider, cosine_similarity
 from src.rag.evaluation import (
     build_default_eval_dataset,
@@ -25,9 +25,9 @@ def test_chunk_text_with_overlap():
 
 def test_knowledge_base_ingest_creates_chunks():
     kb = KnowledgeBase()
-    count = kb.ingest(default_ing_documents(), chunk_size=80, overlap=10)
+    count = kb.ingest(default_banking_documents(), chunk_size=80, overlap=10)
 
-    assert count >= len(default_ing_documents())
+    assert count >= len(default_banking_documents())
     assert all(chunk.id for chunk in kb.chunks)
 
 

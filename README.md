@@ -1,6 +1,6 @@
-# Agentic AI ING Mülakat Hazırlık Projesi
+# Agentic AI Prep Mülakat Hazırlık Projesi
 
-ING Hubs `Expert AI/LLM Data Scientist in Agentic AI` rolü için production mantığı olan, test edilebilir Python agent/LLM servisleri geliştirme projesi.
+Expert AI/LLM Data Scientist in Agentic AI rolü için production mantığı olan, test edilebilir Python agent/LLM servisleri geliştirme projesi.
 
 ## Kurulum
 
@@ -122,6 +122,70 @@ Observability metrics: `GET http://127.0.0.1:8000/v1/observability/metrics`
 
 Trace replay: `GET http://127.0.0.1:8000/v1/observability/traces/{trace_id}`
 
+## Demo UI (Aşama 13)
+
+```powershell
+uvicorn src.api.main:app --reload
+```
+
+Tarayıcı: `http://127.0.0.1:8000/ui/` (root `/` otomatik yönlendirir)
+
+- **Workflow modu:** agent adımları, onay modalı, trace paneli
+- **Chat Stream modu:** SSE token streaming
+- **Feedback:** 👍/👎 → `POST /v1/feedback` (`trace_id` ile eval pipeline'a bağlanır)
+
+Detay: `docs/ai_ux_notes.md`
+
+## System Design (Aşama 14)
+
+Ana case: **Internal Banking Knowledge Assistant + Actionable Support Agent**
+
+Uçtan uca akış tek endpoint'te: `POST /v1/workflow/run` (classify → RAG → policy → tool → audit → trace).
+
+```powershell
+# E2E senaryolar (knowledge, transfer+onay, injection block)
+python -m src.case_study.run_demo
+
+# Entegrasyon testleri
+pytest tests/test_case_study_integration.py -v
+```
+
+Dokümanlar:
+- `docs/system_design_case_study.md` — mimari, failure modes, MVP scope, business impact
+- `docs/production_readiness_checklist.md` — go/no-go checklist
+
+## Mülakat Hazırlık Merkezi (Aşama 15–16)
+
+Tarayıcıda tam rehber: `http://127.0.0.1:8000/ui/`
+
+Sol menüden:
+- **Genel Bakış** — tüm aşamaların özeti
+- **Aşama 0–14** — her biri için: özet, sınıf açıklamaları, canlı API testi, mülakat Q&A
+- **Aşama 15** — STAR leadership hikayeleri + behavioral Q&A
+- **Aşama 16** — 78+ mülakat sorusu, prova takvimi, canlı kod promptları
+- **Agent Demo UI** — workflow + streaming + onay
+
+```powershell
+uvicorn src.api.main:app --reload
+pytest tests/test_learning_hub.py -v
+```
+
+API: `GET /v1/learning-hub` (tüm içerik JSON)
+
+İçerik kaynağı: `src/learning_hub/` modülleri
+
+Feedback API:
+
+```json
+POST /v1/feedback
+{
+  "user_id": "user-1",
+  "conversation_id": "conv-1",
+  "rating": "positive",
+  "trace_id": "optional-trace-id"
+}
+```
+
 Workflow response artık `trace_id` ve `trace_summary` (classification/retrieval/LLM/tool latency timeline + cost estimate) döner.
 
 Security audit: `GET http://127.0.0.1:8000/v1/security/audit/recent`
@@ -145,7 +209,10 @@ Workflow body opsiyonel alanlar: `tenant_id`, `user_role` (`customer`, `support_
 | 10 | Evaluation, guardrails, golden dataset | ✅ |
 | 11 | Security, compliance, banking policy | ✅ |
 | 12 | Docker/Terraform deploy + GitHub CI/CD | ✅ |
-| 13+ | Frontend, system design | ⏳ |
+| 13 | TypeScript client + AI UX demo UI | ✅ |
+| 14 | Full system design case study | ✅ |
+| 15 | Behavioral & technical leadership | ✅ |
+| 16 | Final mülakat simülasyonu + Q&A hub | ✅ |
 
 ## Deploy (isteğe bağlı — test sonrası)
 
@@ -170,7 +237,7 @@ git add .
 git commit -m "Initial commit"
 git branch -M main
 gh auth login
-gh repo create agenticai_ing_prep --public --source=. --remote=origin --push
+gh repo create agentic_ai_prep --public --source=. --remote=origin --push
 ```
 
 Tek kaynak dosyalar: `.env` (gitignore) ve `requirements.txt`.

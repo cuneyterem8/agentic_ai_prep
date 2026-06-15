@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agentic AI Prep — Mülakat Hazırlık Merkezi</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+          <h1>Agentic AI Prep</h1>
+          <p>Agentic AI Mülakat</p>
+        </div>
+        <nav class="sidebar-nav" id="sidebar-nav" aria-label="Ana menü">
+          <div class="nav-section">
+            <h3>Genel</h3>
+            <button class="nav-item active" data-view="overview">📋 Genel Bakış</button>
+            <button class="nav-item" data-view="demo">🤖 Agent Demo UI</button>
+            <button class="nav-item" data-view="stage-15">👔 Leadership</button>
+            <button class="nav-item" data-view="stage-16">🎯 Mülakat Simülasyonu</button>
+          </div>
+          <div class="nav-section">
+            <h3>Aşamalar (0–14)</h3>
+            <div id="stage-nav-list"></div>
+          </div>
+        </nav>
+      </aside>
+
+      <div class="content-area">
+        <header class="topbar">
+          <button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Menü">☰</button>
+          <div>
+            <h2 id="page-title">Yükleniyor...</h2>
+            <p id="page-subtitle" class="subtitle"></p>
+          </div>
+        </header>
+        <main id="main-content" class="main-content"></main>
+      </div>
+    </div>
+
+    <div id="approval-modal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-content">
+        <h2>Yüksek riskli işlem onayı</h2>
+        <p id="modal-summary"></p>
+        <p class="meta">Tool: <span id="modal-tool"></span></p>
+        <p class="meta">Approval ID: <code id="modal-approval-id"></code></p>
+        <div class="approval-actions">
+          <button id="modal-approve-btn" type="button">Onayla</button>
+          <button id="modal-cancel-btn" type="button" class="secondary">Vazgeç</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="./playground.js" type="module"></script>
+    <script src="./demo.js" type="module"></script>
+    <script src="./hub.js" type="module"></script>
+  </body>
+</html>

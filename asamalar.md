@@ -42,3 +42,20 @@ pytest tests/test_deploy_artifacts.py -v
 .\scripts\local-test.ps1
 # Staging deploy (opsiyonel): .\scripts\deploy-compose.ps1
 # AWS deploy (opsiyonel): .\scripts\deploy-aws.ps1 -PlanOnly
+
+# Sadece Aşama 13 (Frontend + AI UX + Feedback)
+pytest tests/test_feedback.py -v
+uvicorn src.api.main:app --reload
+# UI: http://127.0.0.1:8000/ui/
+# Feedback: POST http://127.0.0.1:8000/v1/feedback
+
+# Sadece Aşama 14 (System Design Case Study)
+pytest tests/test_case_study_integration.py -v
+python -m src.case_study.run_demo
+# Doküman: docs/system_design_case_study.md
+
+# Sadece Aşama 15-16 (Leadership + Mülakat Hub)
+pytest tests/test_learning_hub.py -v
+uvicorn src.api.main:app --reload
+# UI: http://127.0.0.1:8000/ui/  → sol menüden tüm aşamalar + Q&A
+# API: GET http://127.0.0.1:8000/v1/learning-hub
