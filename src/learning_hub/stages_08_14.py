@@ -1,6 +1,7 @@
 """Learning hub content for stages 8-14."""
 
 from src.learning_hub.models import StageContent
+from src.learning_hub.stage14_details import STAGE14_CLASSES
 
 STAGES_08_14: list[StageContent] = [
     {
@@ -583,26 +584,7 @@ STAGES_08_14: list[StageContent] = [
         "subtitle": "End-to-end banking assistant",
         "summary": "Tüm modüller tek workflow'da birleşir. E2E scenarios ve production readiness checklist.",
         "topics": ["E2E architecture", "Failure modes", "MVP scope", "Business impact", "Production checklist"],
-        "classes": [
-            {
-                "path": "src/case_study/scenarios.py",
-                "name": "E2E scenarios",
-                "purpose": "Knowledge, transfer+approval, injection block senaryoları.",
-                "key_symbols": ["SCENARIOS", "CaseStudyScenario"],
-            },
-            {
-                "path": "src/case_study/run_demo.py",
-                "name": "CLI demo",
-                "purpose": "Tüm senaryoları workflow üzerinde çalıştırır.",
-                "key_symbols": ["run_scenario()", "main()"],
-            },
-            {
-                "path": "src/agents/workflow.py",
-                "name": "Integrated workflow",
-                "purpose": "Tüm stack'in birleştiği ana orchestrator.",
-                "key_symbols": ["CustomerSupportWorkflow"],
-            },
-        ],
+        "classes": STAGE14_CLASSES,
         "lab_actions": [
             {
                 "id": "case-study-demo",

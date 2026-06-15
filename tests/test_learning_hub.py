@@ -53,6 +53,18 @@ def test_build_hub_content_has_interview_qa_per_stage():
         assert len(stage.get("classes", [])) >= 1, f"Stage {stage['id']} missing classes"
 
 
+def test_all_stages_classes_include_implementation_details():
+    hub = build_hub_content()
+    for stage in hub["stages"]:
+        for cls in stage.get("classes", []):
+            assert cls.get("symbols_detail"), (
+                f"Stage {stage['id']} class {cls['path']} missing symbols_detail"
+            )
+            for detail in cls["symbols_detail"]:
+                assert detail["code"], f"Missing code for {detail['name']}"
+                assert detail["usage"], f"Missing usage for {detail['name']}"
+
+
 def test_ui_hub_assets_are_served(client):
     for asset in ("styles.css", "hub.js", "demo.js", "playground.js"):
         response = client.get(f"/ui/{asset}")

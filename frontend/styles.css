@@ -346,6 +346,94 @@ body {
   border: 1px solid var(--border);
 }
 
+.symbol-details {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.symbol-detail {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--code-bg);
+  overflow: hidden;
+}
+
+.symbol-detail summary {
+  cursor: pointer;
+  padding: 10px 14px;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid transparent;
+  user-select: none;
+}
+
+.symbol-detail summary::-webkit-details-marker {
+  display: none;
+}
+
+.symbol-detail-chevron {
+  color: var(--accent);
+  font-size: 0.65rem;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.symbol-detail[open] .symbol-detail-chevron {
+  transform: rotate(90deg);
+}
+
+.symbol-detail-hint {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.symbol-detail[open] summary {
+  border-bottom-color: var(--border);
+  background: rgba(255, 98, 0, 0.08);
+}
+
+.symbol-detail summary code {
+  color: #fdba74;
+  font-size: 0.9rem;
+}
+
+.symbol-detail-body {
+  padding: 12px 14px 16px;
+}
+
+.symbol-detail-body h5 {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.symbol-detail-body h5:not(:first-child) {
+  margin-top: 14px;
+}
+
+.symbol-code {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  max-height: 420px;
+  overflow: auto;
+}
+
+.symbol-usage {
+  margin: 0;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}
+
 /* Lab */
 .lab-action {
   border: 1px solid var(--border);
@@ -443,10 +531,43 @@ body {
   background: var(--bg-elevated);
   list-style: none;
   color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
 }
 
 .qa-card summary::-webkit-details-marker {
   display: none;
+}
+
+.qa-chevron {
+  color: var(--accent);
+  font-size: 0.65rem;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.qa-card[open] .qa-chevron {
+  transform: rotate(90deg);
+}
+
+.qa-card[open] summary {
+  background: rgba(255, 98, 0, 0.08);
+  border-bottom: 1px solid var(--border);
+}
+
+.qa-question {
+  flex: 1;
+  min-width: 0;
+}
+
+.qa-hint {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+  flex-shrink: 0;
 }
 
 .qa-num {
@@ -455,7 +576,7 @@ body {
   padding: 2px 8px;
   border-radius: 6px;
   font-size: 0.78rem;
-  margin-right: 8px;
+  flex-shrink: 0;
 }
 
 .qa-body {

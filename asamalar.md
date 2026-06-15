@@ -2,7 +2,7 @@ Aşama 0
 
 Ortamı Aktifleştir
 
-cd c:\Users\cnytC\Desktop\code_projects\agenticai_ing_prep
+cd c:\Users\cnytC\Desktop\code_projects\agentic_ai_prep
 .\.venv\Scripts\Activate.ps1
 
 Otomatik Testler (pytest) — Ana yöntem

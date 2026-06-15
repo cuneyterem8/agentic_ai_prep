@@ -1,11 +1,18 @@
 from typing import Any, TypedDict
 
 
-class ClassInfo(TypedDict):
+class SymbolDetail(TypedDict):
+    name: str
+    code: str
+    usage: str
+
+
+class ClassInfo(TypedDict, total=False):
     path: str
     name: str
     purpose: str
     key_symbols: list[str]
+    symbols_detail: list[SymbolDetail]
 
 
 class LabAction(TypedDict, total=False):

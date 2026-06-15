@@ -8,7 +8,11 @@ Expert AI/LLM Data Scientist in Agentic AI rolü için production mantığı ola
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+
+uvicorn src.api.main:app --reload --host 127.0.0.1 --port 8000
 ```
+
+
 
 Tum ortam degiskenleri tek dosyada: `.env` (git'e eklenmez). Ornek alanlar:
 
@@ -238,6 +242,12 @@ git commit -m "Initial commit"
 git branch -M main
 gh auth login
 gh repo create agentic_ai_prep --public --source=. --remote=origin --push
+```
+
+Mevcut repo adını değiştirmek için GitHub → **Settings → General → Repository name** → `agentic_ai_prep`, ardından:
+
+```powershell
+git remote set-url origin https://github.com/cuneyterem8/agentic_ai_prep.git
 ```
 
 Tek kaynak dosyalar: `.env` (gitignore) ve `requirements.txt`.

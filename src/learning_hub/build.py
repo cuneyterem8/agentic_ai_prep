@@ -1,3 +1,4 @@
+from src.learning_hub.enrich import enrich_stage_list
 from src.learning_hub.models import HubContent
 from src.learning_hub.stage15 import STAGE15_CONTENT
 from src.learning_hub.stage16 import STAGE16_CONTENT
@@ -6,7 +7,7 @@ from src.learning_hub.stages_08_14 import STAGES_08_14
 
 
 def build_hub_content() -> HubContent:
-    stages = STAGES_00_07 + STAGES_08_14
+    stages = enrich_stage_list(STAGES_00_07 + STAGES_08_14)
     return {
         "version": "1.0.0",
         "stages": stages,

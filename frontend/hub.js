@@ -167,10 +167,36 @@ function renderClasses(stage) {
           <div class="symbols">
             ${(c.key_symbols || []).map((s) => `<span class="symbol-tag">${escapeHtml(s)}</span>`).join("")}
           </div>
+          ${renderSymbolDetails(c.symbols_detail || [])}
         </article>`
         )
         .join("")}
     </section>
+  `;
+}
+
+function renderSymbolDetails(details) {
+  if (!details.length) return "";
+  return `
+    <div class="symbol-details">
+      ${details
+        .map(
+          (item) => `
+        <details class="symbol-detail">
+          <summary>
+            <span class="symbol-detail-chevron" aria-hidden="true">▶</span>
+            <code>${escapeHtml(item.name)}</code>
+            <span class="symbol-detail-hint">Python implementasyonu — tıkla</span>
+          </summary>
+          <div class="symbol-detail-body">
+            <pre class="code-block symbol-code">${escapeHtml(item.code)}</pre>
+            <h5>Nasıl kullanılır?</h5>
+            <p class="symbol-usage">${escapeHtml(item.usage)}</p>
+          </div>
+        </details>`
+        )
+        .join("")}
+    </div>
   `;
 }
 
@@ -220,8 +246,13 @@ function renderQA(qaList, title) {
       ${qaList
         .map(
           (qa, i) => `
-        <details class="qa-card" ${i < 2 ? "open" : ""}>
-          <summary><span class="qa-num">S${i + 1}</span> ${escapeHtml(qa.question)}</summary>
+        <details class="qa-card">
+          <summary>
+            <span class="qa-chevron" aria-hidden="true">▶</span>
+            <span class="qa-num">S${i + 1}</span>
+            <span class="qa-question">${escapeHtml(qa.question)}</span>
+            <span class="qa-hint">Cevabı gör — tıkla</span>
+          </summary>
           <div class="qa-body">
             <div class="qa-section"><h4>Cevap</h4><p>${escapeHtml(qa.answer)}</p></div>
             ${qa.deep_dive ? `<div class="qa-section"><h4>Derinleştirme</h4><p>${escapeHtml(qa.deep_dive)}</p></div>` : ""}
