@@ -1,0 +1,45 @@
+# Deploy/staging stack — local günlük geliştirme için ZORUNLU DEĞİL.
+# Kullanım: docker compose -f docker-compose.deploy.yml up --build -d
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: agenticai-postgres-deploy
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-agenticai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agenticai}
+      POSTGRES_DB: ${POSTGRES_DB:-agenticai}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_deploy_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-agenticai} -d ${POSTGRES_DB:-agenticai}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agenticai-api-deploy
+    ports:
+      - "${API_PORT:-8000}:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-agenticai}:${POSTGRES_PASSWORD:-agenticai}@postgres:5432/${POSTGRES_DB:-agenticai}
+      APP_ENV: ${APP_ENV:-staging}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+
+volumes:
+  postgres_deploy_data:

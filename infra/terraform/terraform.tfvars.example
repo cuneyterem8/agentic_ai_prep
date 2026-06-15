@@ -1,0 +1,10 @@
+aws_region     = "eu-central-1"
+project_name   = "agenticai-ing-prep"
+environment    = "staging"
+app_version    = "0.1.0"
+llm_provider   = "mock"
+desired_count  = 1
+db_username    = "agenticai"
+db_password    = "change-me-strong-password"
+db_name        = "agenticai"
+openai_api_key = ""

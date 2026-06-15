@@ -1,0 +1,12 @@
+.venv
+__pycache__
+.pytest_cache
+.git
+.github
+.env
+data
+infra/terraform/.terraform
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.*
+terminals
+agent-transcripts

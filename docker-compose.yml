@@ -1,0 +1,19 @@
+# Opsiyonel: sadece PostgreSQL (local terminal geliştirmede SQLite kullanılıyor)
+# Günlük kullanım: pytest + uvicorn (Docker gerekmez)
+# Tam deploy stack için: docker-compose.deploy.yml
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: agenticai-postgres
+    environment:
+      POSTGRES_USER: agenticai
+      POSTGRES_PASSWORD: agenticai
+      POSTGRES_DB: agenticai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

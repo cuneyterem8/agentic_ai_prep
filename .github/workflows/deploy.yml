@@ -1,0 +1,140 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Deploy target
+        required: true
+        default: compose
+        type: choice
+        options:
+          - compose
+          - aws
+      app_version:
+        description: Image/app version tag
+        required: true
+        default: 0.1.0
+      environment:
+        description: Environment name
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
+
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  test-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: pytest -q
+
+  deploy-compose:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'compose'
+    needs: test-gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare deploy env
+        run: |
+          cat > .env <<'EOF'
+          APP_ENV=staging
+          APP_VERSION=${{ github.event.inputs.app_version }}
+          LOG_LEVEL=INFO
+          LLM_PROVIDER=mock
+          OPENAI_API_KEY=
+          OPENAI_MODEL=gpt-4o
+          OPENAI_FALLBACK_MODEL=gpt-4o-mini
+          LLM_TIMEOUT_SECONDS=30
+          PROMPT_VERSION=v1
+          POSTGRES_USER=agenticai
+          POSTGRES_PASSWORD=agenticai
+          POSTGRES_DB=agenticai
+          POSTGRES_PORT=5432
+          API_PORT=8000
+          DATABASE_URL=sqlite:///./data/app.db
+          EOF
+
+      - name: Deploy with Docker Compose
+        run: |
+          docker compose -f docker-compose.deploy.yml up --build -d
+          for i in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:8000/health; then
+              exit 0
+            fi
+            sleep 3
+          done
+          docker compose -f docker-compose.deploy.yml logs api
+          exit 1
+
+  deploy-aws:
+    if: |
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'aws') ||
+      startsWith(github.ref, 'refs/tags/v')
+    needs: test-gate
+    runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'staging' }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "value=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${{ github.event.inputs.app_version }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION || 'eu-central-1' }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr
+
+      - name: Build and push image
+        env:
+          ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
+          IMAGE_TAG: ${{ steps.version.outputs.value }}
+        run: |
+          IMAGE_URI="$ECR_REGISTRY/${{ vars.ECR_REPOSITORY || 'agenticai-ing-prep-api' }}:$IMAGE_TAG"
+          docker build -t "$IMAGE_URI" .
+          docker push "$IMAGE_URI"
+          echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_ENV"
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Terraform apply
+        working-directory: infra/terraform
+        env:
+          TF_VAR_app_version: ${{ steps.version.outputs.value }}
+          TF_VAR_environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'staging' }}
+          TF_VAR_container_image: ${{ env.IMAGE_URI }}
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          terraform init -input=false
+          terraform apply -auto-approve -input=false
+
+      - name: Print endpoints
+        working-directory: infra/terraform
+        run: terraform output
