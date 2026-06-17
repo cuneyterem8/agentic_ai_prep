@@ -771,6 +771,106 @@ STAGE_INTERVIEW_QA: dict[int, list[dict]] = {
             ],
             "tags": ["recovery", "failure"],
         },
+        {
+            "question": "Agentic AI nedir ve normal chatbot'tan farkı nedir?",
+            "answer": (
+                "Agentic AI, LLM'in yalnızca tek seferlik metin cevabı üretmesinden öte; "
+                "hedef belirleme, planlama, araç kullanımı, gözlemleme ve iteratif aksiyon "
+                "alma kabiliyetine sahip sistem mimarisidir. Normal chatbot tek adımlı Q&A "
+                "yapar; agent çok adımlı görev tamamlar, tool çağırır, durumu gözlemler. "
+                "Agentic sistemlerde bellek (kısa/uzun dönem), planner ve evaluator bileşenleri "
+                "bulunur. Risk profili daha yüksektir çünkü sistem aksiyon alabilir. "
+                "Bankacılıkta agentic yaklaşım policy engine, MFA ve human-in-the-loop ile "
+                "sınırlandırılmalıdır; her chatbot agent değildir."
+            ),
+            "deep_dive": (
+                "`src/agents/react_loop.py` Observe→Think→Act döngüsünü demo eder. "
+                "`src/agents/workflow.py` production orchestrator: classify→RAG→policy→tool. "
+                "Lab: POST /v1/agent/react ile ReAct adımları görünür."
+            ),
+            "red_flags": ["Her chatbot'u agent sanmak", "Tek prompt ile kompleks görev"],
+            "strong_signals": ["Multi-step tool loop", "Policy outside LLM"],
+            "tags": ["agentic-basics"],
+        },
+        {
+            "question": "ReAct pattern nedir ve production'da nasıl uygulanır?",
+            "answer": (
+                "ReAct (Reasoning + Acting), modelin düşünme (Thought) ve aksiyon (Action) "
+                "adımlarını birlikte yürüttüğü agent pattern'idir. Her döngüde: kullanıcı "
+                "isteği gözlemlenir, bir sonraki aksiyon planlanır, tool çağrılır veya cevap "
+                "üretilir, observation okunur, gerekirse tekrarlanır. Production'da Thought "
+                "kullanıcıya gösterilmez; internal orchestration mantığıdır. max_steps limiti "
+                "infinite loop'u engeller. Tool sonuçları state'e append edilir; final "
+                "answer yalnızca yeterli context toplandığında verilir."
+            ),
+            "deep_dive": (
+                "`src/agents/react_loop.py` run_react_loop() tool_call/final_answer/escalate "
+                "karar tiplerini uygular. `get_tool_registry()` mevcut banking tool'larını reuse eder."
+            ),
+            "red_flags": ["Sonsuz agent loop", "Thought'u kullanıcıya ham göstermek"],
+            "strong_signals": ["max_steps guard", "Typed step schema"],
+            "tags": ["agentic-basics", "react"],
+        },
+        {
+            "question": "Agent memory türleri nelerdir ve bankacılıkta nasıl yönetilir?",
+            "answer": (
+                "Short-term memory mevcut konuşma bağlamıdır (son birkaç turn). Long-term memory "
+                "kullanıcı tercihleri ve geçmiş etkileşimlerden saklanan bilgilerdir. Episodic "
+                "memory geçmiş görev deneyimlerini tutar ('bu kullanıcı daha önce kart sorunu yaşadı'). "
+                "Semantic memory genel domain bilgisidir (RAG corpus). Tool memory son API "
+                "sonuçlarını içerir. Bankacılıkta PII uzun süre saklanmamalı, maskelenmeli "
+                "ve regülasyona uygun retention policy uygulanmalıdır. Hassas finansal veri "
+                "agent state'inde değil güvenli API tool'larından anlık alınmalıdır."
+            ),
+            "deep_dive": (
+                "`src/agents/state.py` AgentState workflow memory; chat history DB'de. "
+                "`src/rag/retriever.py` semantic memory (knowledge base). "
+                "Stage 6 Q&A memory vs retrieval ayrımına bak."
+            ),
+            "red_flags": ["PII'yi uzun süre agent state'te tutmak"],
+            "strong_signals": ["Memory türlerini ayırmak", "PII minimization"],
+            "tags": ["agentic-basics", "memory"],
+        },
+        {
+            "question": "Agentic AI'nin temel riskleri nelerdir?",
+            "answer": (
+                "Hallucination, tool misuse (yanlış API/parametre), unauthorized action, "
+                "prompt injection, data leakage, infinite loop, over-autonomy (insan onayı "
+                "gereken işlerde fazla bağımsızlık) ve bad planning. Klasik LLM'den risk "
+                "daha yüksektir çünkü sistem aksiyon alabilir. Mitigasyon: policy engine, "
+                "tool allowlist, max_steps, input/output guardrails, MFA, audit logging ve "
+                "human-in-the-loop. Finansal işlemlerde LLM asla tek başına transfer "
+                "başlatmamalıdır."
+            ),
+            "deep_dive": (
+                "`src/agents/policies.py` unauthorized tool engeli. "
+                "`src/security/input_guardrails.py` injection detection. "
+                "`src/agents/react_loop.py` max_steps=5 infinite loop koruması."
+            ),
+            "red_flags": ["Riskleri küçümsemek", "LLM'e doğrudan yetki vermek"],
+            "strong_signals": ["Defense in depth", "Human approval gates"],
+            "tags": ["agentic-basics", "risk"],
+        },
+        {
+            "question": "Mülakatta 'LLM karar verir ama yetki vermez' prensibini nasıl açıklarsın?",
+            "answer": (
+                "LLM niyet anlayabilir, plan önerebilir ve hangi tool'un gerekebileceğini "
+                "söyleyebilir; ancak transfer başlatma, hesap bilgisi gösterme veya kart "
+                "bloke etme yetkisi ayrı policy katmanında kontrol edilir. Authentication, "
+                "authorization, fraud check, transaction limit, MFA ve explicit user "
+                "confirmation LLM dışında hard-coded policy engine ile uygulanır. "
+                "Audit logging her kritik kararı kaydeder. Bu ayrım bankacılık, sağlık "
+                "ve hukuk gibi regüle alanlarda zorunludur."
+            ),
+            "deep_dive": (
+                "`src/agents/policies.py` can_execute_tool() LLM'den bağımsız. "
+                "`src/agents/workflow.py` REQUIRE_APPROVAL high-risk transfer. "
+                "`src/case_study/bank_chatbot.py` intent→policy→route akışı."
+            ),
+            "red_flags": ["LLM karar = otomatik exec", "Policy'yi prompt'a bırakmak"],
+            "strong_signals": ["Policy engine as code", "MFA + audit zorunlu"],
+            "tags": ["agentic-basics", "policy"],
+        },
     ],
     5: [
         {
@@ -1105,6 +1205,156 @@ STAGE_INTERVIEW_QA: dict[int, list[dict]] = {
                 "Farklı lifecycle ve access control",
             ],
             "tags": ["memory", "rag"],
+        },
+        {
+            "question": "Groundedness, correctness ve faithfulness arasındaki fark nedir?",
+            "answer": (
+                "Groundedness: cevaptaki iddialar verilen context ile destekleniyor mu? "
+                "Correctness: cevap gerçek dünyada veya ground truth'a göre doğru mu? "
+                "Faithfulness: model context dışı bilgi uydurdu mu? RAG'de groundedness "
+                "ve faithfulness sık kullanılır; correctness ayrı ground truth gerektirir. "
+                "Context dışı ama doğru cevap: yüksek correctness, düşük groundedness."
+            ),
+            "deep_dive": (
+                "`src/evals/judge.py` groundedness ve correctness ayrı skorlar üretir. "
+                "`GET /v1/evals/judge` FAST/EFT golden case'leri ile pratik demo. "
+                "Lab: düşük groundedness örneği EFT hafta sonu sorusu."
+            ),
+            "red_flags": ["Metrikleri karıştırmak"],
+            "strong_signals": ["Context vs ground truth ayrımı"],
+            "tags": ["rag-eval", "groundedness"],
+        },
+        {
+            "question": "Sparse, dense ve hybrid retrieval ne zaman kullanılır?",
+            "answer": (
+                "Sparse (BM25/keyword): exact term eşleşmesi güçlü — 'KMH', policy numarası. "
+                "Dense (embedding): semantik benzerlik — 'kredili mevduat hesabı' = KMH. "
+                "Hybrid ikisini birleştirir; production'da çoğu bankacılık RAG hybrid kullanır. "
+                "Trade-off: hybrid daha karmaşık ama recall artırır."
+            ),
+            "deep_dive": (
+                "`src/rag/retriever.py` 70% vector + 30% keyword hybrid skor hesaplar. "
+                "Lab: 'KMH limiti' sorgusu acronym expansion ile semantic eşleşme test edilir."
+            ),
+            "red_flags": ["Sadece vector, acronym kaçırma"],
+            "strong_signals": ["Hybrid BM25+vector"],
+            "tags": ["rag-eval", "retrieval"],
+        },
+        {
+            "question": "Reranking nedir ve ne zaman devreye girer?",
+            "answer": (
+                "Retriever hızlı ama kaba top-k getirir; reranker query+chunk birlikte okuyarak "
+                "daha hassas sıralama yapar. Pipeline: retriever top-50 → reranker → top-5 → LLM. "
+                "Cross-encoder pahalıdır; candidate pool küçültüldükten sonra uygulanır."
+            ),
+            "deep_dive": (
+                "`src/rag/reranker.py` mock cross-encoder ikinci aşama skorlama. "
+                "`src/rag/pipeline.py` retrieve → rerank → generate akışını birleştirir. "
+                "POST /v1/rag/pipeline lab action ile test edilir."
+            ),
+            "red_flags": ["Reranker olmadan büyük top-k LLM'e vermek"],
+            "strong_signals": ["Two-stage retrieve+rerank"],
+            "tags": ["rag-eval", "reranking"],
+        },
+        {
+            "question": "MRR, NDCG ve Hit Rate@k ne ölçer?",
+            "answer": (
+                "Hit Rate@k: top-k'da en az bir relevant var mı (0/1). "
+                "MRR: ilk relevant sonucun sırasının reciprocal'ı — sıralama kalitesi. "
+                "NDCG: relevance derecesi + sıralama birlikte; üstte relevant ise skor yüksek. "
+                "Recall@k doğru chunk'ı bulma; precision@k top-k içindeki relevant oranı."
+            ),
+            "deep_dive": (
+                "`src/rag/evaluation.py` mrr(), ndcg_at_k(), hit_rate_at_k() fonksiyonları. "
+                "GET /v1/rag/eval genişletilmiş retrieval metrik raporu döner. "
+                "pytest tests/test_rag.py metrik helper testlerini içerir."
+            ),
+            "red_flags": ["Sadece precision, sıralama kalitesini ölçmemek"],
+            "strong_signals": ["MRR + NDCG + Recall birlikte"],
+            "tags": ["rag-eval", "metrics"],
+        },
+        {
+            "question": "RAG ile fine-tuning arasında nasıl seçim yaparsın?",
+            "answer": (
+                "RAG: güncel bilgi, kaynak gösterme, bilgi güncelleme kolay, regülasyon uyumu "
+                "daha kontrollü. Fine-tuning: davranış, format ve domain style öğretmek için "
+                "daha uygun; bilgi depolamak için değil. Değişen policy dokümanları için RAG; "
+                "sabit output format ve ton için fine-tuning veya prompt engineering."
+            ),
+            "deep_dive": (
+                "Hybrid yaklaşım: RAG güncel bilgi için, structured output/prompt tuning "
+                "format için. Fine-tuning bilgi depolamak yerine davranış öğretmek için "
+                "değerlendirilir; maliyet ve operasyon yükü trade-off olarak anlatılır."
+            ),
+            "red_flags": ["Her şeyi fine-tune ile çözmek"],
+            "strong_signals": ["RAG for knowledge, FT for behavior"],
+            "tags": ["rag-eval", "fine-tuning"],
+        },
+        {
+            "question": "RAG data preparation pipeline adımları nelerdir?",
+            "answer": (
+                "Ingestion → parsing → cleaning → normalization → metadata extraction → "
+                "chunking → embedding → indexing → eval dataset → monitoring/refresh. "
+                "Kötü data preparation kötü RAG demektir; retrieval eval olmadan pipeline "
+                "tamamlanmış sayılmaz."
+            ),
+            "deep_dive": (
+                "`src/rag/preparation.py` prepare_documents() clean→normalize→chunk pipeline. "
+                "`KnowledgeBase.ingest()` bu pipeline'ı kullanır. "
+                "pytest tests/test_rag_preparation.py regresyon testleri."
+            ),
+            "red_flags": ["Ham PDF direkt embed"],
+            "strong_signals": ["Clean + normalize + metadata"],
+            "tags": ["data-prep"],
+        },
+        {
+            "question": "Chunking stratejilerini nasıl karşılaştırırsın?",
+            "answer": (
+                "Fixed-size: basit ama cümle ortası bölebilir. Sliding window: overlap ile "
+                "boundary kaybını azaltır. Recursive: paragraph→sentence hiyerarşisi. "
+                "Semantic/structure-aware: section header ve tablo bütünlüğü korur. "
+                "FAQ için küçük chunk; hukuki doküman için büyük chunk + overlap."
+            ),
+            "deep_dive": (
+                "`src/rag/preparation.py` chunk_by_words(), chunk_recursive(), chunk_text() "
+                "stratejileri. Stage 6 lab'da farklı chunk_size parametreleri denenebilir."
+            ),
+            "red_flags": ["Tek strateji her dokümana"],
+            "strong_signals": ["Doc-type bazlı strateji"],
+            "tags": ["data-prep", "chunking"],
+        },
+        {
+            "question": "Metadata ve access control filtering retrieval'da neden kritiktir?",
+            "answer": (
+                "Metadata: access_level, tenant, version, valid_from/until filtreleri. "
+                "Yanlış tasarım: önce tüm dokümanlardan retrieve, sonra filtre. Doğru: "
+                "retrieval aşamasında yetkisiz chunk'ları exclude et. Bankacılıkta iç "
+                "doküman müşteriye gösterilmemeli."
+            ),
+            "deep_dive": (
+                "`src/rag/retriever.py` metadata_filter parametresi retrieval sırasında uygulanır. "
+                "`prepare_documents()` document_title ve access_level metadata ekler. "
+                "Bankacılık senaryosunda internal doc customer filter örneği mülakatta çizilir."
+            ),
+            "red_flags": ["Retrieve sonra filter"],
+            "strong_signals": ["Filter at retrieval time"],
+            "tags": ["data-prep", "security"],
+        },
+        {
+            "question": "Embedding kalitesini hangi faktörler etkiler?",
+            "answer": (
+                "Model seçimi (domain/dil), chunk kalitesi, noise seviyesi (OCR hataları), "
+                "chunk size, metadata filtreleme ve domain terminology (EFT, FAST, KMH). "
+                "Kötü chunk kötü embedding üretir; embedding modeli tek başına kurtarmaz."
+            ),
+            "deep_dive": (
+                "`src/rag/preparation.py` ACRONYM_MAP ile EFT/FAST/KMH normalize edilir. "
+                "`src/rag/embeddings.py` MockEmbeddingProvider test ortamında deterministik embed. "
+                "Production'da domain+dil uyumlu embedding model seçimi eval ile kanıtlanır."
+            ),
+            "red_flags": ["Sadece model değiştirmek"],
+            "strong_signals": ["Chunk quality + domain terms"],
+            "tags": ["data-prep", "embeddings"],
         },
     ],
     7: [

@@ -82,9 +82,10 @@ async def test_classification_golden_dataset_eval_scores():
 @pytest.mark.asyncio
 async def test_run_all_evals_aggregates_suites():
     report = await run_all_evals(MockLLMClient())
-    assert report["total"] == 15
+    assert report["total"] == 19
     assert "classification" in report["suites"]
     assert "analyst" in report["suites"]
+    assert "judge" in report["suites"]
     assert report["score"] > 0
 
 

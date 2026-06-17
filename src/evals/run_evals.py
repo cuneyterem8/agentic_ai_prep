@@ -8,6 +8,7 @@ from src.llm.mock_client import MockLLMClient
 from src.security.guardrails import validate_sql
 from src.security.input_guardrails import GuardrailCategory, validate_user_input
 from src.security.sql_correctness import validate_sql_correctness
+from src.evals.judge import run_judge_eval
 
 EVALS_DIR = Path(__file__).resolve().parent
 ANALYST_DATASET_PATH = EVALS_DIR / "golden_dataset.jsonl"
@@ -143,9 +144,10 @@ async def run_all_evals(client=None) -> dict[str, Any]:
     client = client or MockLLMClient()
     classification = await run_classification_eval(client)
     analyst = await run_analyst_eval(client)
+    judge = await run_judge_eval(client)
 
-    total = classification["total"] + analyst["total"]
-    passed = classification["passed"] + analyst["passed"]
+    total = classification["total"] + analyst["total"] + judge["total"]
+    passed = classification["passed"] + analyst["passed"] + judge["passed"]
 
     return {
         "total": total,
@@ -155,6 +157,7 @@ async def run_all_evals(client=None) -> dict[str, Any]:
         "suites": {
             "classification": classification,
             "analyst": analyst,
+            "judge": judge,
         },
     }
 

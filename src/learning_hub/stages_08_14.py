@@ -204,8 +204,21 @@ STAGES_08_14: list[StageContent] = [
         "title": "Aşama 10 — Evaluation & Guardrails",
         "subtitle": "Golden dataset, regression, injection defense",
         "summary": "Golden dataset eval runner, classification/analyst regression, input guardrails test suite.",
-        "topics": ["Golden dataset", "Regression eval", "Input guardrails", "PII masking", "Test pyramid for LLM"],
+        "topics": [
+            "Golden dataset",
+            "Regression eval",
+            "LLM-as-a-Judge",
+            "Input guardrails",
+            "PII masking",
+            "Test pyramid for LLM",
+        ],
         "classes": [
+            {
+                "path": "src/evals/judge.py",
+                "name": "judge_answer",
+                "purpose": "Rubric-based LLM-as-a-Judge: groundedness, correctness, completeness, safety.",
+                "key_symbols": ["judge_answer()", "pointwise_eval()", "pairwise_eval()"],
+            },
             {
                 "path": "src/evals/run_evals.py",
                 "name": "run_all_evals",
@@ -231,6 +244,13 @@ STAGES_08_14: list[StageContent] = [
                 "label": "Classification Eval",
                 "type": "api_get",
                 "endpoint": "/v1/classify/eval",
+                "method": "GET",
+            },
+            {
+                "id": "eval-judge",
+                "label": "LLM-as-a-Judge Eval",
+                "type": "api_get",
+                "endpoint": "/v1/evals/judge",
                 "method": "GET",
             },
             {
@@ -609,7 +629,7 @@ STAGES_08_14: list[StageContent] = [
             "pytest tests/test_case_study_integration.py -v",
             "python -m src.case_study.run_demo",
         ],
-        "dod": ["3 E2E scenario pass", "System design doc", "Production checklist"],
+        "dod": ["4 E2E scenario pass", "System design doc", "Production checklist"],
         "failure_modes": ["Prompt+vector only design", "No business metrics"],
         "interview_qa": [
             {

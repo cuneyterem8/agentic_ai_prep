@@ -266,3 +266,42 @@ Detay: `docs/production_readiness_checklist.md`
 - Traceability: her adım audit + trace_id
 - Cost/latency trade-off: mock → OpenAI, SQLite → RDS bilinçli geçiş
 - Rollback: image tag downgrade + eval regression gate
+
+## 17. Intent taxonomy (bank chatbot)
+
+| Intent | Örnek | Route |
+|--------|-------|-------|
+| `general_faq` | "EFT saatleri nedir?" | RAG pipeline |
+| `product_info` | "İhtiyaç kredisi nedir?" | RAG pipeline |
+| `balance_query` | "Bakiyem ne kadar?" | Secure API tool (auth required) |
+| `transaction_history` | "Son 5 işlemimi göster" | Secure API tool |
+| `money_transfer` | "Ali'ye 5000 TL gönder" | MFA + explicit confirmation |
+| `fraud_report` | "İzinsiz para çekildi" | Fraud workflow |
+| `financial_advice` | "Bu hisseyi alayım mı?" | Refusal / escalation |
+
+Referans implementasyon: `src/case_study/bank_chatbot.py`
+
+## 18. Observability log şeması (referans)
+
+```sql
+CREATE TABLE bank_chatbot_logs (
+    id BIGSERIAL PRIMARY KEY,
+    session_id TEXT,
+    user_id_hash TEXT,
+    query TEXT,
+    intent TEXT,
+    retrieved_doc_ids JSONB,
+    retrieval_scores JSONB,
+    tool_calls JSONB,
+    answer TEXT,
+    groundedness_score FLOAT,
+    correctness_score FLOAT,
+    safety_score FLOAT,
+    latency_ms INT,
+    escalated BOOLEAN,
+    error_type TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+Judge eval: `GET /v1/evals/judge` — retrieval eval: `GET /v1/rag/eval`

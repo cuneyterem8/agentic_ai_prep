@@ -8,9 +8,16 @@ from src.rag.documents import default_banking_documents
 from src.rag.embeddings import MockEmbeddingProvider, cosine_similarity
 from src.rag.evaluation import (
     build_default_eval_dataset,
+    dcg,
+    hit_rate_at_k,
+    mrr,
+    ndcg_at_k,
     precision_at_k,
+    reciprocal_rank,
     run_retrieval_evaluation,
 )
+from src.rag.query_rewrite import rewrite_query
+from src.rag.reranker import rerank
 from src.rag.retriever import KnowledgeBase, MockRetriever, VectorRetriever
 from src.rag.service import answer_with_sources
 
@@ -73,7 +80,45 @@ async def test_retrieval_evaluation_dataset():
 
     assert report.mean_precision_at_k > 0
     assert report.mean_recall_at_k > 0
-    assert len(report.cases) == 3
+    assert report.mean_mrr >= 0
+    assert report.mean_ndcg_at_k >= 0
+    assert len(report.cases) == 5
+
+
+def test_mrr_and_ndcg_helpers():
+    assert reciprocal_rank([0, 1, 0]) == 0.5
+    assert mrr([[1, 0, 0], [0, 1, 0]]) == pytest.approx(0.75)
+    assert hit_rate_at_k(["a", "b"], {"a"}, k=2) == 1.0
+    assert ndcg_at_k([3, 2, 0]) > 0
+    assert dcg([3, 2, 0]) > 0
+
+
+def test_rewrite_query_expands_acronym():
+    rewritten = rewrite_query("KMH limiti nedir?")
+    assert "Kredili" in rewritten or "KMH" in rewritten
+
+
+@pytest.mark.asyncio
+async def test_reranker_reorders_results():
+    retriever = VectorRetriever()
+    results = await retriever.retrieve("transfer approval", top_k=3)
+    reranked = rerank("transfer approval limit", results, top_k=2)
+    assert len(reranked) <= 2
+    assert reranked[0].rank == 1
+
+
+@pytest.mark.asyncio
+async def test_rag_pipeline_endpoint(client=None):
+    client = TestClient(app)
+    response = client.post(
+        "/v1/rag/pipeline",
+        json={"question": "FAST işlemleri ne zaman yapılır?", "top_k": 3},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["answer"]
+    assert body["source_chunk_ids"]
+    assert body.get("eval") is not None
 
 
 @pytest.mark.asyncio

@@ -240,7 +240,9 @@ STAGE_INTERVIEW_QA_08_14: dict[int, list[dict]] = {
                 "CI'da LLM mock'lanır; deterministik cevaplarla flake'siz test sağlanır. "
                 "`run_evals` pipeline skor hesaplar ve threshold altında build fail eder. "
                 "Dataset versiyonlanır; her değişiklik git'te izlenebilir olmalıdır. "
-                "LLM-as-judge tek başına yeterli değildir; structured assertion tercih edilir. "
+                "LLM-as-judge tek başına yeterli değildir; structured assertion primary, "
+                "judge supplementary hybrid yaklaşım tercih edilir. Golden dataset + mock "
+                "eval CI gate; judge RAG groundedness regression için ikinci katman."
                 "Production'dan anonim örnekler periyodik olarak dataset'e eklenir."
             ),
             "deep_dive": (
@@ -249,8 +251,8 @@ STAGE_INTERVIEW_QA_08_14: dict[int, list[dict]] = {
                 "CI workflow `.github/workflows/ci.yml` pytest ve eval gate'i içerir. "
                 "`GET /v1/classify/eval` endpoint'i canlı skoru döner."
             ),
-            "red_flags": ["LLM-as-judge only"],
-            "strong_signals": ["Deterministic mock eval", "Versioned dataset"],
+            "red_flags": ["LLM-as-judge only", "Judge olmadan RAG production"],
+            "strong_signals": ["Deterministic mock eval + judge hybrid", "Versioned dataset"],
             "tags": ["regression", "eval"],
         },
         {
@@ -313,6 +315,76 @@ STAGE_INTERVIEW_QA_08_14: dict[int, list[dict]] = {
             "red_flags": ["10 synthetic only"],
             "strong_signals": ["Production sampling", "SME labeled"],
             "tags": ["dataset", "eval"],
+        },
+        {
+            "question": "LLM-as-a-Judge nedir ve ne zaman kullanılır?",
+            "answer": (
+                "LLM-as-a-Judge, bir LLM çıktısını başka bir LLM (veya rubric motoru) ile "
+                "değerlendirme yaklaşımıdır. Question, context, generated answer ve rubric "
+                "verilir; groundedness, correctness, completeness, safety skorları üretilir. "
+                "RAG regression, prompt versiyon karşılaştırma ve synthetic test set "
+                "değerlendirmede ölçeklenebilir. Tek başına yeterli değildir; structured "
+                "assertion ve golden dataset ile hybrid kullanılmalıdır."
+            ),
+            "deep_dive": (
+                "`src/evals/judge.py` judge_answer() rubric skorları döner. "
+                "`GET /v1/evals/judge` golden dataset eval. "
+                "`rag_judge_golden.jsonl` FAST/EFT groundedness örnekleri."
+            ),
+            "red_flags": ["Sadece judge, golden dataset yok"],
+            "strong_signals": ["Hybrid eval stack", "Versioned rubric"],
+            "tags": ["llm-judge", "eval"],
+        },
+        {
+            "question": "Groundedness ile correctness arasındaki fark nedir?",
+            "answer": (
+                "Groundedness cevaptaki iddiaların verilen context/kaynak dokümanlarla "
+                "desteklenip desteklenmediğini ölçer. Correctness cevabın gerçek dünyada "
+                "veya ground truth'a göre doğru olup olmadığını ölçer. Context dışı ama "
+                "gerçekte doğru bir cevap: yüksek correctness, düşük groundedness. "
+                "RAG sistemlerinde groundedness kritik metriklerden biridir."
+            ),
+            "deep_dive": (
+                "`src/evals/judge.py` her iki metriği ayrı skorlar. "
+                "Golden case: EFT hafta sonu — context desteklemez → düşük groundedness."
+            ),
+            "red_flags": ["İki metriği aynı sanmak"],
+            "strong_signals": ["Context vs ground truth ayrımı"],
+            "tags": ["llm-judge", "groundedness"],
+        },
+        {
+            "question": "Pointwise ve pairwise evaluation farkı nedir?",
+            "answer": (
+                "Pointwise: tek cevaba rubric skorları verilir (groundedness 0-5). "
+                "Pairwise: iki cevap karşılaştırılır, hangisi daha iyi seçilir. "
+                "Pointwise basit ve otomatiktir; skor kalibrasyonu zordur. Pairwise "
+                "insan tercihine daha yakın olabilir ama hangi metrikte iyi olduğunu "
+                "ayrı ölçmek gerekir. Production'da ikisi birlikte kullanılabilir."
+            ),
+            "deep_dive": (
+                "`src/evals/judge.py` pointwise_eval() ve pairwise_eval() fonksiyonları. "
+                "pytest tests/test_judge.py pairwise A vs B groundedness karşılaştırmasını test eder."
+            ),
+            "red_flags": ["Sadece pairwise, rubric yok"],
+            "strong_signals": ["Her iki modu bilerek seçmek"],
+            "tags": ["llm-judge", "eval"],
+        },
+        {
+            "question": "LLM-as-a-Judge güvenilirliği nasıl artırılır?",
+            "answer": (
+                "Net rubric, JSON output zorunluluğu, düşük temperature, golden dataset "
+                "kalibrasyonu, insan değerlendirmesiyle korelasyon ölçümü. Birden fazla "
+                "judge modeliyle ensemble yapılabilir. Safety-critical kararlar sadece "
+                "LLM judge'a bırakılmamalı; rule-based validation ile desteklenmelidir."
+            ),
+            "deep_dive": (
+                "`src/evals/judge.py` deterministic mock judge CI için; "
+                "production'da temperature=0 + JSON schema. "
+                "`aggregate_metrics()` trend izleme."
+            ),
+            "red_flags": ["Tek judge, kalibrasyon yok"],
+            "strong_signals": ["Human correlation", "Rule-based safety backup"],
+            "tags": ["llm-judge", "eval"],
         },
     ],
     11: [
@@ -718,6 +790,60 @@ STAGE_INTERVIEW_QA_08_14: dict[int, list[dict]] = {
             "red_flags": ["Impact ölçülmez"],
             "strong_signals": ["Measurable KPIs"],
             "tags": ["business", "impact"],
+        },
+        {
+            "question": "Intent routing ile policy engine arasındaki fark nedir?",
+            "answer": (
+                "Intent classifier kullanıcının niyetini belirler (general_faq, balance_query, "
+                "money_transfer, fraud_report). Policy engine LLM'den bağımsız olarak "
+                "authentication, authorization, MFA, transaction limit ve tool izinlerini "
+                "kontrol eder. LLM 'transfer yapmak istiyor' diyebilir; transferi başlatma "
+                "yetkisi policy katmanındadır. Routing hangi pipeline'a gideceğini seçer; "
+                "policy o pipeline'da aksiyonun yapılıp yapılamayacağını belirler."
+            ),
+            "deep_dive": (
+                "`src/case_study/bank_chatbot.py` classify → _map_intent → authorize_action akışı. "
+                "`src/agents/policies.py` can_execute_tool production policy engine kararını verir."
+            ),
+            "red_flags": ["LLM hem intent hem yetki verir"],
+            "strong_signals": ["Intent vs policy ayrımı"],
+            "tags": ["system-design", "banking"],
+        },
+        {
+            "question": "Bankacılık chatbotunda prompt injection savunması nasıl tasarlanır?",
+            "answer": (
+                "System prompt ve user input ayrılır; retrieved dokümanlar instruction değil "
+                "data olarak ele alınır. Tool permissions LLM dışında policy engine'de kontrol "
+                "edilir. Input guardrail injection pattern'lerini classify öncesi bloklar. "
+                "Output guardrail PII sızıntısını engeller. Sensitive action için hard-coded "
+                "policy ve human escalation zorunludur."
+            ),
+            "deep_dive": (
+                "`src/security/input_guardrails.py` validate_user_input injection bloklar. "
+                "Case study scenario prompt_injection_blocked E2E test eder. "
+                "`src/case_study/bank_chatbot.py` guardrail ilk pipeline adımıdır."
+            ),
+            "red_flags": ["Tek katman savunma"],
+            "strong_signals": ["Defense in depth", "Retrieval as data not instruction"],
+            "tags": ["system-design", "security"],
+        },
+        {
+            "question": "Bank chatbot başarı metrikleri nelerdir?",
+            "answer": (
+                "Retrieval: Recall@k, MRR, NDCG. Generation: groundedness, correctness, "
+                "completeness, safety. Business: containment rate, escalation rate. "
+                "UX: CSAT, thumbs up/down. Performance: latency, timeout rate. "
+                "Compliance: audit completeness, policy violation rate. "
+                "İki katmanlı eval: retrieval ve generation ayrı ölçülmelidir."
+            ),
+            "deep_dive": (
+                "`GET /v1/rag/eval` retrieval metrikleri (MRR, NDCG). "
+                "`GET /v1/evals/judge` generation rubric skorları. "
+                "`GET /v1/observability/metrics` latency ve cost trendleri."
+            ),
+            "red_flags": ["Sadece accuracy", "Retrieval ve generation karışık"],
+            "strong_signals": ["Two-layer eval", "Business + compliance KPIs"],
+            "tags": ["system-design", "metrics"],
         },
     ],
 }

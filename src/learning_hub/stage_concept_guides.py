@@ -193,7 +193,15 @@ STAGE_CONCEPT_GUIDES: dict[int, ConceptGuide] = {
             "orchestrator'dır. `src/agents/state.py` typed `AgentState` tanımlar; "
             "`src/agents/checkpoint.py` onay beklerken duraklatmayı sağlar. "
             "`POST /v1/workflow/run` E2E akışı tetikler; demo UI onay modalı ile resume yapar. "
-            "Transfer senaryosu `awaiting_approval` durumunda checkpoint kaydeder."
+            "Transfer senaryosu `awaiting_approval` durumunda checkpoint kaydeder. "
+            "`src/agents/react_loop.py` ReAct (Reasoning+Acting) döngüsünü demo eder; "
+            "Observe→Think→Act pattern'i tool_call/final_answer/escalate karar tipleriyle "
+            "modellenir. Agent vs chatbot: agent çok adımlı görev tamamlar, tool kullanır; "
+            "chatbot tek adımlı Q&A yapar. Memory türleri: short-term (konuşma), long-term "
+            "(tercihler), episodic (geçmiş görevler), semantic (RAG corpus), tool memory "
+            "(API sonuçları). Temel riskler: hallucination, tool misuse, prompt injection, "
+            "infinite loop, over-autonomy. Kritik prensip: LLM karar verebilir ama yetki "
+            "vermez — authorization policy engine'de kalır."
         ),
     },
     5: {
@@ -267,11 +275,13 @@ STAGE_CONCEPT_GUIDES: dict[int, ConceptGuide] = {
         ),
         "in_this_project": (
             "`src/rag/documents.py` içindeki `default_banking_documents()` örnek bankacılık policy "
-            "corpus'u sağlar. `src/rag/chunking.py` ve `src/rag/embeddings.py` indexleme "
-            "pipeline'ını oluşturur. `src/rag/retriever.py` in-memory hybrid (vector + keyword) "
-            "arama yapar. `src/rag/service.py` içindeki `answer_with_sources()` önce retrieve eder, "
-            "sonra grounded cevap üretir — `POST /v1/rag/query`. Workflow'da retrieve adımı aynı "
-            "retriever'ı kullanır; final answer'da kaynak id'ler görünür."
+            "corpus'u sağlar (FAST/EFT dahil). `src/rag/preparation.py` clean→normalize→chunk "
+            "pipeline; `KnowledgeBase.ingest()` entegrasyonu. `src/rag/retriever.py` hybrid "
+            "(vector + keyword) arama. `src/rag/reranker.py` ikinci aşama sıralama. "
+            "`src/rag/query_rewrite.py` acronym expansion. `src/rag/pipeline.py` end-to-end "
+            "RAG + opsiyonel judge eval — `POST /v1/rag/pipeline`. `src/rag/evaluation.py` "
+            "precision@k, recall@k, MRR, NDCG, Hit Rate@k — `GET /v1/rag/eval`. "
+            "Retrieval ve generation eval ayrı katmanlarda ölçülür."
         ),
     },
     7: {
@@ -412,12 +422,15 @@ STAGE_CONCEPT_GUIDES: dict[int, ConceptGuide] = {
             "Guardrail false positive/negative trade-off'u mülakatta tartışılır."
         ),
         "in_this_project": (
-            "`python -m src.evals.run_evals` classification + analyst eval çalıştırır. "
-            "`GET /v1/evals/run` API üzerinden eval tetiklenir. "
+            "`python -m src.evals.run_evals` classification + analyst + judge eval çalıştırır. "
+            "`GET /v1/evals/run` API üzerinden tüm eval suite'leri tetiklenir. "
+            "`GET /v1/evals/judge` RAG cevap kalitesi rubric eval. "
+            "`src/evals/judge.py` groundedness/correctness/completeness/safety skorları; "
+            "pointwise ve pairwise modları. Groundedness ≠ correctness: context desteği vs "
+            "gerçek dünya doğruluğu. Structured assertion primary; LLM-as-a-Judge supplementary "
+            "hybrid yaklaşım — judge-only red flag. "
             "`src/security/input_guardrails.py` injection tespiti yapar. "
-            "`src/security/pii.py` mask_pii write-time'da uygular. "
-            "Golden dataset dosyaları regression senaryolarını tutar; injection test classify "
-            "ve workflow'un ilk satırında bloklanır."
+            "`src/security/pii.py` mask_pii write-time'da uygular."
         ),
     },
     11: {
@@ -559,10 +572,14 @@ STAGE_CONCEPT_GUIDES: dict[int, ConceptGuide] = {
         ),
         "in_this_project": (
             "`POST /v1/workflow/run` ana E2E endpoint'tir; classify → RAG → policy → tool → "
-            "audit → trace akışını tetikler. `python -m src.case_study.run_demo` üç senaryoyu "
-            "CLI'da koşar. `docs/system_design_case_study.md` mimari ve failure mode iskeleti. "
-            "`docs/production_readiness_checklist.md` go/no-go kriterleri. "
-            "`tests/test_case_study_integration.py` E2E regression testlerini içerir."
+            "audit → trace akışını tetikler. `src/case_study/bank_chatbot.py` intent routing + "
+            "policy + RAG/tools deterministik referans akışı. Intent taxonomy: general_faq, "
+            "balance_query, money_transfer, fraud_report. MFA transfer akışı explicit onay "
+            "gerektirir. Observability: session_id, intent, retrieved_doc_ids, tool_calls, "
+            "groundedness_score, escalation_flag log alanları. "
+            "`python -m src.case_study.run_demo` dört senaryoyu CLI'da koşar. "
+            "`docs/system_design_case_study.md` mimari ve failure mode iskeleti. "
+            "`tests/test_case_study_integration.py` E2E regression."
         ),
     },
 }

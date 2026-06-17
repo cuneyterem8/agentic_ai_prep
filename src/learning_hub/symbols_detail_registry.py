@@ -550,7 +550,30 @@ SYMBOLS_DETAIL_BY_PATH: dict[str, list[dict]] = {
             ),
         },
     ],
-    # --- Stage 4: Workflow ---
+    # --- Stage 4: Workflow + ReAct ---
+    "src/agents/react_loop.py": [
+        {
+            "name": "run_react_loop",
+            "code": dedent("""\
+                async def run_react_loop(*, user_query, user_id, max_steps=5) -> ReActResult:
+                    state = {"query": user_query, "user_id": user_id, "steps": []}
+                    for _ in range(max_steps):
+                        decision = _decide_next_action(state)
+                        if decision.action_type == "tool_call":
+                            result = await registry[decision.tool_name].run(decision.tool_arguments)
+                            decision.observation = result.output
+                            state["steps"].append(decision)
+                        elif decision.action_type == "final_answer":
+                            return ReActResult(steps=state["steps"], final_answer=..., status="completed")
+                        elif decision.action_type == "escalate":
+                            return ReActResult(..., status="escalated")
+            """).strip(),
+            "usage": (
+                "ReAct agent döngüsü: Observe→Think→Act. Mock deterministic karar verir; "
+                "production'da LLM JSON decision + policy engine yetki kontrolü birlikte çalışır."
+            ),
+        },
+    ],
     "src/agents/workflow.py": [
         {
             "name": "CustomerSupportWorkflow",
@@ -878,6 +901,88 @@ SYMBOLS_DETAIL_BY_PATH: dict[str, list[dict]] = {
                 "Grounded RAG sorgu endpoint'idir. Kaynak chunk'lar ve LLM cevabını "
                 "birlikte döner; learning hub RAG lab'ında kullanılır."
             ),
+        },
+    ],
+    "src/rag/preparation.py": [
+        {
+            "name": "prepare_documents()",
+            "code": dedent("""\
+                def prepare_documents(documents, *, chunk_size=120, overlap=30, strategy="fixed"):
+                    for document in documents:
+                        text = normalize_text(clean_text(document.content))
+                        parts = chunk_by_words(text) if strategy == "words" else chunk_text(text, ...)
+                        prepared.append(PreparedChunk(chunk_id=f"{document.id}-chunk-{index}", ...))
+                    return prepared
+            """).strip(),
+            "usage": "RAG data prep: clean → normalize → chunk → metadata enrichment pipeline.",
+        },
+    ],
+    "src/rag/pipeline.py": [
+        {
+            "name": "rag_pipeline()",
+            "code": dedent("""\
+                async def rag_pipeline(user_query, client, *, top_k=5, include_judge=True):
+                    normalized = rewrite_query(user_query)
+                    dense = await retriever.retrieve(normalized, top_k=top_k * 2)
+                    reranked = rerank(normalized, dense, top_k=top_k)
+                    context = build_context(reranked)
+                    answer = await generate_chat_response(messages, client)
+                    if include_judge:
+                        result["eval"] = await judge_answer(question=..., context=context, answer=...)
+                    return result
+            """).strip(),
+            "usage": "End-to-end RAG: rewrite → retrieve → rerank → context → generate → judge eval.",
+        },
+    ],
+    "src/rag/reranker.py": [
+        {
+            "name": "rerank()",
+            "code": dedent("""\
+                def rerank(query, candidates, *, top_k=5):
+                    for item in candidates:
+                        joint_score = (0.6 * item.score) + (0.4 * keyword_overlap)
+                    return sorted_results[:top_k]
+            """).strip(),
+            "usage": "Mock cross-encoder second-stage ranking after hybrid retriever.",
+        },
+    ],
+    "src/rag/query_rewrite.py": [
+        {
+            "name": "rewrite_query()",
+            "code": dedent("""\
+                def rewrite_query(query: str) -> str:
+                    for phrase, expansion in EXPANSION_MAP.items():
+                        if phrase in query.lower():
+                            query = f"{query} {expansion}"
+                    return query
+            """).strip(),
+            "usage": "Acronym and shorthand expansion (KMH, FAST, kart kayıp) before retrieval.",
+        },
+    ],
+    "src/evals/judge.py": [
+        {
+            "name": "judge_answer()",
+            "code": dedent("""\
+                async def judge_answer(*, question, context, answer, client=None) -> JudgeRubric:
+                    return JudgeRubric(
+                        groundedness=..., correctness=..., completeness=..., safety=..., reason="..."
+                    )
+            """).strip(),
+            "usage": "LLM-as-a-Judge rubric scoring for RAG answers; GET /v1/evals/judge golden eval.",
+        },
+    ],
+    "src/case_study/bank_chatbot.py": [
+        {
+            "name": "bank_chatbot()",
+            "code": dedent("""\
+                async def bank_chatbot(*, user_id, query, session, client):
+                    if guardrail.blocked: return blocked_response
+                    intent = _map_intent(classification.intent.value, query)
+                    if not authorize_action(session, intent): return auth_required
+                    if intent in ("general_faq",): return rag_answer
+                    if intent == "money_transfer": return mfa_required_message
+            """).strip(),
+            "usage": "Bank chatbot reference flow: guardrails → intent → policy → RAG or secure API.",
         },
     ],
     # --- Stage 7: Data layer ---

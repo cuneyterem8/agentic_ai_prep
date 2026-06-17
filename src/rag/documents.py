@@ -61,4 +61,14 @@ def default_banking_documents() -> list[SourceDocument]:
             ),
             metadata={"category": "cards", "department": "fraud"},
         ),
+        SourceDocument(
+            id="doc-5",
+            title="EFT and FAST Policy",
+            content=(
+                "FAST işlemleri 7/24 yapılabilir. "
+                "EFT işlemleri bankanın belirlediği mesai saatlerinde hafta içi gerçekleştirilir. "
+                "Kayıp kart durumunda müşteri kartını mobil uygulama veya müşteri hizmetleri üzerinden bloke edebilir."
+            ),
+            metadata={"category": "payments", "department": "retail", "section": "transfers"},
+        ),
     ]

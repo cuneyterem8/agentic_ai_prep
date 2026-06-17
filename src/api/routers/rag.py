@@ -1,9 +1,18 @@
 from fastapi import APIRouter, Depends
 
 from src.api.dependencies import get_llm_client
-from src.api.schemas import RagEvalCaseResult, RagEvalResponse, RagQueryRequest, RagQueryResponse, RagSource
+from src.api.schemas import (
+    RagEvalCaseResult,
+    RagEvalResponse,
+    RagPipelineRequest,
+    RagPipelineResponse,
+    RagQueryRequest,
+    RagQueryResponse,
+    RagSource,
+)
 from src.llm.base import LLMClient
 from src.rag.evaluation import build_default_eval_dataset, run_retrieval_evaluation
+from src.rag.pipeline import rag_pipeline
 from src.rag.service import answer_with_sources
 
 router = APIRouter(prefix="/v1", tags=["rag"])
@@ -34,6 +43,29 @@ async def rag_query(
     )
 
 
+@router.post("/rag/pipeline", response_model=RagPipelineResponse)
+async def rag_pipeline_endpoint(
+    body: RagPipelineRequest,
+    client: LLMClient = Depends(get_llm_client),
+) -> RagPipelineResponse:
+    result = await rag_pipeline(
+        body.question,
+        client,
+        top_k=body.top_k,
+        include_judge=body.include_judge,
+    )
+
+    return RagPipelineResponse(
+        question=result["query"],
+        rewritten_query=result["rewritten_query"],
+        source_chunk_ids=result["source_chunk_ids"],
+        context=result["context"],
+        answer=result["answer"],
+        model=result["model"],
+        eval=result.get("eval"),
+    )
+
+
 @router.get("/rag/eval", response_model=RagEvalResponse)
 async def rag_eval() -> RagEvalResponse:
     report = await run_retrieval_evaluation(build_default_eval_dataset(), top_k=3)
@@ -41,11 +73,17 @@ async def rag_eval() -> RagEvalResponse:
     return RagEvalResponse(
         mean_precision_at_k=report.mean_precision_at_k,
         mean_recall_at_k=report.mean_recall_at_k,
+        mean_hit_rate_at_k=report.mean_hit_rate_at_k,
+        mean_mrr=report.mean_mrr,
+        mean_ndcg_at_k=report.mean_ndcg_at_k,
         cases=[
             RagEvalCaseResult(
                 query=case.query,
                 precision_at_k=case.precision_at_k,
                 recall_at_k=case.recall_at_k,
+                hit_rate_at_k=case.hit_rate_at_k,
+                reciprocal_rank=case.reciprocal_rank,
+                ndcg_at_k=case.ndcg_at_k,
                 retrieved_chunk_ids=case.retrieved_chunk_ids,
                 relevant_chunk_ids=case.relevant_chunk_ids,
             )

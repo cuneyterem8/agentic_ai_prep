@@ -365,6 +365,7 @@ function renderStage16() {
       <button class="tab" data-tab="1">Tüm Sorular (${s.total_questions})</button>
       <button class="tab" data-tab="2">Canlı Kod</button>
       <button class="tab" data-tab="3">System Design</button>
+      <button class="tab" data-tab="4">Master Cevap</button>
     </div>
     <div id="tab-content"></div>
   `;
@@ -447,6 +448,23 @@ function renderStage16() {
               <p><strong>Beklenen:</strong> ${escapeHtml(lc.expected_approach)}</p>
               <p><strong>Proje referansı:</strong> <code>${escapeHtml(lc.project_reference)}</code></p>
             </article>`
+            )
+            .join("")}
+        </section>`;
+    } else if (idx === 4) {
+      const cheatsheet = s.interview_cheatsheet || {};
+      tabContent.innerHTML = `
+        <section class="panel">
+          <h3>Hepsini Birleştiren Teknik Cevap</h3>
+          <blockquote class="principle">${escapeHtml(s.master_technical_answer || "")}</blockquote>
+          <h3>Kritik Mülakat Noktaları</h3>
+          ${Object.entries(cheatsheet)
+            .map(
+              ([key, items]) => `
+            <div class="cheatsheet-group">
+              <h4>${escapeHtml(key.replace(/_/g, " "))}</h4>
+              <ul>${(items || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+            </div>`
             )
             .join("")}
         </section>`;

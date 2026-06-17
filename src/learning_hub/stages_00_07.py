@@ -475,8 +475,23 @@ STAGES_00_07: list[StageContent] = [
         "title": "Aşama 4 — LangGraph Agent Workflow",
         "subtitle": "State machine, policy, checkpoint",
         "summary": "CustomerSupportWorkflow: explicit state, conditional routing, human approval, checkpoint resume.",
-        "topics": ["State schema", "Graph nodes", "Policy engine", "Checkpoint", "Idempotent tools"],
+        "topics": [
+            "State schema",
+            "Graph nodes",
+            "Policy engine",
+            "Checkpoint",
+            "Idempotent tools",
+            "ReAct",
+            "Agent memory",
+            "Agent risks",
+        ],
         "classes": [
+            {
+                "path": "src/agents/react_loop.py",
+                "name": "run_react_loop",
+                "purpose": "ReAct döngüsü: Thought → Action → Observation → Final Answer.",
+                "key_symbols": ["run_react_loop()", "ReActStep", "ReActResult"],
+            },
             {
                 "path": "src/agents/workflow.py",
                 "name": "CustomerSupportWorkflow",
@@ -509,6 +524,18 @@ STAGES_00_07: list[StageContent] = [
             },
         ],
         "lab_actions": [
+            {
+                "id": "react-loop",
+                "label": "ReAct loop demo",
+                "type": "api_post",
+                "endpoint": "/v1/agent/react",
+                "method": "POST",
+                "body": {
+                    "user_id": "lab-user",
+                    "conversation_id": "lab-react-1",
+                    "query": "Kredi başvurusu için hangi belgeler gerekir?",
+                },
+            },
             {
                 "id": "wf-policy",
                 "label": "Workflow: Policy sorusu",
@@ -668,8 +695,41 @@ STAGES_00_07: list[StageContent] = [
         "title": "Aşama 6 — RAG & Retrieval",
         "subtitle": "Chunking, embeddings, grounded answers",
         "summary": "Document corpus, vector+keyword hybrid retriever, grounded Q&A ve retrieval eval.",
-        "topics": ["Chunking", "Embeddings", "Hybrid search", "Citations", "Retrieval eval"],
+        "topics": [
+            "Chunking",
+            "Embeddings",
+            "Hybrid search",
+            "Citations",
+            "Retrieval eval",
+            "Reranking",
+            "Data ingestion",
+            "Metadata",
+        ],
         "classes": [
+            {
+                "path": "src/rag/preparation.py",
+                "name": "prepare_documents",
+                "purpose": "Clean → normalize → chunk → metadata pipeline.",
+                "key_symbols": ["prepare_documents()", "chunk_by_words()", "chunk_recursive()"],
+            },
+            {
+                "path": "src/rag/pipeline.py",
+                "name": "rag_pipeline",
+                "purpose": "Query rewrite → retrieve → rerank → context → generate → judge.",
+                "key_symbols": ["rag_pipeline()"],
+            },
+            {
+                "path": "src/rag/reranker.py",
+                "name": "rerank",
+                "purpose": "Mock cross-encoder second-stage ranking.",
+                "key_symbols": ["rerank()"],
+            },
+            {
+                "path": "src/rag/query_rewrite.py",
+                "name": "rewrite_query",
+                "purpose": "Acronym expansion and query rewriting.",
+                "key_symbols": ["rewrite_query()"],
+            },
             {
                 "path": "src/rag/documents.py",
                 "name": "default_banking_documents",
@@ -703,6 +763,18 @@ STAGES_00_07: list[StageContent] = [
         ],
         "lab_actions": [
             {
+                "id": "rag-pipeline",
+                "label": "RAG Full Pipeline",
+                "type": "api_post",
+                "endpoint": "/v1/rag/pipeline",
+                "method": "POST",
+                "body": {
+                    "question": "FAST işlemleri hafta sonu yapılabilir mi?",
+                    "top_k": 5,
+                    "include_judge": True,
+                },
+            },
+            {
                 "id": "rag-query",
                 "label": "RAG Query",
                 "type": "api_post",
@@ -723,7 +795,7 @@ STAGES_00_07: list[StageContent] = [
             },
         ],
         "commands": ["pytest tests/test_rag.py -v"],
-        "dod": ["Chunk ids görünür", "Retrieval eval metrik"],
+        "dod": ["Chunk ids görünür", "MRR/NDCG eval", "Pipeline + judge eval"],
         "failure_modes": ["Tüm doc prompt'ta", "Kaynak göstermeme"],
         "interview_qa": [
             {

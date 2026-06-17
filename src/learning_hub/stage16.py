@@ -46,10 +46,11 @@ STAGE16_CONTENT = {
         {"order": 5, "area": "PostgreSQL + schema", "duration_min": 15, "difficulty": "Orta-Zor", "focus": "Idempotency, audit, tenant isolation"},
         {"order": 6, "area": "AWS production architecture", "duration_min": 15, "difficulty": "Zor", "focus": "ECS, RDS, secrets, rollback"},
         {"order": 7, "area": "Observability + debugging", "duration_min": 15, "difficulty": "Zor", "focus": "Trace replay, RCA"},
-        {"order": 8, "area": "Evaluation + guardrails", "duration_min": 15, "difficulty": "Zor", "focus": "Golden dataset, injection defense"},
-        {"order": 9, "area": "Full system design", "duration_min": 30, "difficulty": "Expert", "focus": "Internal banking assistant E2E"},
-        {"order": 10, "area": "Behavioral + leadership", "duration_min": 15, "difficulty": "Expert", "focus": "STAR stories, stakeholder management"},
-        {"order": 11, "area": "Senin soruların", "duration_min": 10, "difficulty": "-", "focus": "Takım, roadmap, eval kültürü"},
+        {"order": 8, "area": "LLM-as-a-Judge + groundedness", "duration_min": 15, "difficulty": "Zor", "focus": "Rubric eval, hybrid assertion+judge"},
+        {"order": 9, "area": "Evaluation + guardrails", "duration_min": 15, "difficulty": "Zor", "focus": "Golden dataset, injection defense"},
+        {"order": 10, "area": "Full system design", "duration_min": 30, "difficulty": "Expert", "focus": "Internal banking assistant E2E"},
+        {"order": 11, "area": "Behavioral + leadership", "duration_min": 15, "difficulty": "Expert", "focus": "STAR stories, stakeholder management"},
+        {"order": 12, "area": "Senin soruların", "duration_min": 10, "difficulty": "-", "focus": "Takım, roadmap, eval kültürü"},
     ],
     "opening_pitch": (
         "Ben Python ağırlıklı AI/LLM data scientist'im; agent sistemlerinde önce deterministic, "
@@ -82,7 +83,54 @@ STAGE16_CONTENT = {
             "expected_approach": "validate_sql guardrail + regeneration + canonical fallback",
             "project_reference": "src/security/guardrails.py, src/agents/data_analyst.py",
         },
+        {
+            "id": "lc-5",
+            "prompt": "RAG cevabını groundedness rubric ile değerlendir.",
+            "expected_approach": "JudgeRubric + pointwise_eval + golden JSONL",
+            "project_reference": "src/evals/judge.py, src/evals/rag_judge_golden.jsonl",
+        },
+        {
+            "id": "lc-6",
+            "prompt": "Retrieval eval için MRR ve NDCG hesapla.",
+            "expected_approach": "reciprocal_rank + dcg + ndcg_at_k fonksiyonları",
+            "project_reference": "src/rag/evaluation.py",
+        },
     ],
+    "master_technical_answer": (
+        "Agentic AI, LLM'in yalnızca yanıt üretmediği; planlama, araç kullanımı, gözlemleme, "
+        "değerlendirme ve iteratif aksiyon alma kabiliyetine sahip olduğu sistem mimarisidir. "
+        "LLM-as-a-Judge ile RAG cevapları rubric bazlı değerlendirilir; groundedness ≠ correctness. "
+        "Banka chatbotu: intent routing + policy engine + RAG (genel bilgi) + secure API (kişisel bilgi). "
+        "RAG pipeline: ingestion → chunk → embed → hybrid retrieve → rerank → generate → iki katmanlı eval. "
+        "LLM karar verebilir ama yetki vermez; MFA, audit ve human-in-the-loop zorunludur."
+    ),
+    "interview_cheatsheet": {
+        "agentic_ai": [
+            "Agent = LLM + tools + planning + memory + guardrails",
+            "Her chatbot agent değildir",
+            "LLM karar verir, yetki vermez",
+        ],
+        "llm_judge": [
+            "Groundedness ≠ Correctness",
+            "Structured assertion primary, judge supplementary",
+            "Safety-critical kararlar sadece judge'a bırakılmaz",
+        ],
+        "bank_chatbot": [
+            "Genel bilgi RAG, kişisel bilgi secure API",
+            "MFA + explicit confirmation kritik işlemlerde",
+            "Audit logging zorunlu",
+        ],
+        "rag": [
+            "RAG = retrieval + generation",
+            "Hybrid search + reranking production kalitesini artırır",
+            "Eval iki katmanlı: retrieval + generation",
+        ],
+        "data_prep": [
+            "Kötü data prep = kötü RAG",
+            "Metadata access control için kritik",
+            "Chunk semantik bütünlük korunmalı",
+        ],
+    },
     "system_design_prompt": {
         "question": "Kurum çalışanları için Internal Banking Knowledge Assistant + Actionable Support Agent tasarla.",
         "answer_skeleton": [

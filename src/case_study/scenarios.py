@@ -45,4 +45,18 @@ SCENARIOS: tuple[CaseStudyScenario, ...] = (
         expected_steps=(),
         should_block=True,
     ),
+    CaseStudyScenario(
+        name="fraud_report_routing",
+        message="Müşteri şüpheli kart işlemi bildirdi, fraud case açmam gerekiyor",
+        expected_status="completed",
+        expected_steps=(
+            "classify_intent",
+            "retrieve_context",
+            "decide_action",
+            "request_human_approval",
+            "execute_tool",
+            "final_answer",
+            "audit_log",
+        ),
+    ),
 )

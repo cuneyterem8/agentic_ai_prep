@@ -17,8 +17,32 @@ def test_learning_hub_endpoint_returns_full_content(client):
     assert body["version"]
     assert len(body["stages"]) == 15
     assert body["stage15"]["stories"]
-    assert body["stage16"]["total_questions"] >= 70
-    assert body["overview"]["total_interview_questions"] >= 70
+    assert body["stage16"]["total_questions"] >= 95
+    assert body["overview"]["total_interview_questions"] >= 95
+
+
+def test_learning_hub_stage4_has_react_content(client):
+    response = client.get("/v1/learning-hub/stages/4")
+    stage = response.json()["stage"]
+    topics = stage.get("topics", [])
+    assert "ReAct" in topics
+    paths = [c["path"] for c in stage.get("classes", [])]
+    assert "src/agents/react_loop.py" in paths
+
+
+def test_learning_hub_stage6_has_pipeline(client):
+    response = client.get("/v1/learning-hub/stages/6")
+    stage = response.json()["stage"]
+    paths = [c["path"] for c in stage.get("classes", [])]
+    assert "src/rag/pipeline.py" in paths
+    assert "src/rag/preparation.py" in paths
+
+
+def test_learning_hub_stage16_master_answer(client):
+    response = client.get("/v1/learning-hub/stages/16")
+    stage = response.json()["stage"]
+    assert stage.get("master_technical_answer")
+    assert stage.get("interview_cheatsheet")
 
 
 def test_learning_hub_stage_endpoint(client):

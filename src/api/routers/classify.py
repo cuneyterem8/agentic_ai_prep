@@ -4,6 +4,7 @@ from src.agents.classifier import classify_customer_message
 from src.api.dependencies import get_llm_client
 from src.api.schemas import ClassifyRequest, ClassifyResponse
 from src.evals.run_evals import run_all_evals, run_classification_eval
+from src.evals.judge import run_judge_eval
 from src.llm.base import LLMClient
 from src.security.input_guardrails import validate_user_input
 
@@ -51,3 +52,10 @@ async def run_all_evals_endpoint(
     client: LLMClient = Depends(get_llm_client),
 ) -> dict:
     return await run_all_evals(client)
+
+
+@router.get("/evals/judge")
+async def run_judge_eval_endpoint(
+    client: LLMClient = Depends(get_llm_client),
+) -> dict:
+    return await run_judge_eval(client)

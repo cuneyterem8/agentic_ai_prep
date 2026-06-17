@@ -42,6 +42,28 @@ class AgentRunResponse(BaseModel):
     model: str
 
 
+class ReActRequest(BaseModel):
+    user_id: str = Field(min_length=1, max_length=128)
+    conversation_id: str = Field(min_length=1, max_length=128)
+    query: str = Field(min_length=1, max_length=8000)
+
+
+class ReActStepResponse(BaseModel):
+    thought: str
+    action_type: str
+    tool_name: str | None = None
+    tool_arguments: dict[str, Any] = Field(default_factory=dict)
+    observation: str | None = None
+
+
+class ReActResponse(BaseModel):
+    conversation_id: str
+    query: str
+    status: str
+    final_answer: str
+    steps: list[ReActStepResponse]
+
+
 class ErrorDetail(BaseModel):
     code: str
     message: str
@@ -177,10 +199,29 @@ class RagQueryResponse(BaseModel):
     model: str
 
 
+class RagPipelineRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=4000)
+    top_k: int = Field(default=5, ge=1, le=20)
+    include_judge: bool = True
+
+
+class RagPipelineResponse(BaseModel):
+    question: str
+    rewritten_query: str
+    source_chunk_ids: list[str]
+    context: str
+    answer: str
+    model: str
+    eval: dict[str, Any] | None = None
+
+
 class RagEvalCaseResult(BaseModel):
     query: str
     precision_at_k: float
     recall_at_k: float
+    hit_rate_at_k: float = 0.0
+    reciprocal_rank: float = 0.0
+    ndcg_at_k: float = 0.0
     retrieved_chunk_ids: list[str]
     relevant_chunk_ids: list[str]
 
@@ -188,6 +229,9 @@ class RagEvalCaseResult(BaseModel):
 class RagEvalResponse(BaseModel):
     mean_precision_at_k: float
     mean_recall_at_k: float
+    mean_hit_rate_at_k: float = 0.0
+    mean_mrr: float = 0.0
+    mean_ndcg_at_k: float = 0.0
     cases: list[RagEvalCaseResult]
 
 

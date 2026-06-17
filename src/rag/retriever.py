@@ -1,6 +1,7 @@
 from src.rag.chunking import chunk_text
 from src.rag.documents import Chunk, SourceDocument
 from src.rag.embeddings import EmbeddingProvider, MockEmbeddingProvider, cosine_similarity
+from src.rag.preparation import prepare_documents, prepared_to_chunks
 
 
 class KnowledgeBase:
@@ -17,22 +18,22 @@ class KnowledgeBase:
         *,
         chunk_size: int = 120,
         overlap: int = 30,
+        strategy: str = "fixed",
     ) -> int:
         self.chunks.clear()
         self.vectors.clear()
 
-        for document in documents:
-            parts = chunk_text(document.content, chunk_size=chunk_size, overlap=overlap)
-            for index, part in enumerate(parts):
-                chunk = Chunk(
-                    id=f"{document.id}-chunk-{index}",
-                    document_id=document.id,
-                    content=part,
-                    metadata=document.metadata,
-                    chunk_index=index,
-                )
-                self.chunks.append(chunk)
-                self.vectors.append(self.embedding_provider.embed(part))
+        prepared = prepare_documents(
+            documents,
+            chunk_size=chunk_size,
+            overlap=overlap,
+            strategy=strategy,
+        )
+        chunks = prepared_to_chunks(prepared)
+
+        for chunk in chunks:
+            self.chunks.append(chunk)
+            self.vectors.append(self.embedding_provider.embed(chunk.content))
 
         return len(self.chunks)
 
